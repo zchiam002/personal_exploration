@@ -109,11 +109,20 @@ def col(name_or_hex, alpha=None):
 
 
 def paint(c, fill=None, stroke=None, lw=1.6, alpha=None):
-    """Set fill/stroke state; returns (do_fill, do_stroke) for path drawing."""
+    """
+    Set fill/stroke state; returns (do_fill, do_stroke) for path drawing.
+
+    Alpha is always written, never left at whatever the previous shape used --
+    otherwise one translucent blob quietly washes out everything drawn after
+    it, including gradient fills.
+    """
+    a = 1.0 if alpha is None else alpha
     if fill is not None:
         c.setFillColor(col(fill, alpha))
+        c.setFillAlpha(a)
     if stroke is not None:
         c.setStrokeColor(col(stroke))
+        c.setStrokeAlpha(a)
         c.setLineWidth(lw)
     return fill is not None, stroke is not None
 
@@ -182,11 +191,146 @@ def blob(c, pts, fill=None, stroke=None, lw=1.6, alpha=None,
     c.drawPath(p, stroke=s, fill=f)
 
 
+# --------------------------------------------------------------- shading ---
+#
+# v2 render pass. Flat fills read as clip-art; the same silhouettes with a
+# gentle top-to-bottom gradient, a rim light and a contact shadow read as
+# painted. Everything below is additive -- no shape changes, only rendering.
+
+RICH = True          # set False for the flat v1 look
+MIN_GRAD = 9.0       # shapes shorter than this stay flat (keeps the PDF small)
+
+
+def _mkpath(c, pts, closed=True, tension=1.0):
+    p = c.beginPath()
+    p.moveTo(*pts[0])
+    for c1, c2, end in _catmull(pts, closed, tension):
+        p.curveTo(c1[0], c1[1], c2[0], c2[1], end[0], end[1])
+    if closed:
+        p.close()
+    return p
+
+
+def grad_fill(c, pts, fill, closed=True, tension=1.0, lift=1.18, drop=0.84,
+              alpha=None):
+    """Fill a smooth shape with a soft vertical gradient."""
+    ys = [p[1] for p in pts]
+    y0, y1 = min(ys), max(ys)
+    if not RICH or (y1 - y0) < MIN_GRAD or alpha is not None:
+        blob(c, pts, fill=fill, alpha=alpha, closed=closed, tension=tension)
+        return
+    c.saveState()
+    c.setFillAlpha(1.0)
+    c.setStrokeAlpha(1.0)
+    c.clipPath(_mkpath(c, pts, closed, tension), stroke=0, fill=0)
+    c.linearGradient(0, y0, 0, y1,
+                     [col(shade(fill, drop)), col(shade(fill, lift))],
+                     extend=True)
+    c.restoreState()
+
+
+def grad_disc(c, cx, cy, rx, ry, fill, lift=1.22, drop=0.82, hx=-0.35,
+              hy=0.35):
+    """A round shape lit from the upper left -- heads, foliage, fruit."""
+    if not RICH or max(rx, ry) < MIN_GRAD * 0.5:
+        ellipse(c, cx, cy, rx, ry, fill=fill)
+        return
+    c.saveState()
+    c.setFillAlpha(1.0)
+    c.setStrokeAlpha(1.0)
+    p = c.beginPath()
+    p.ellipse(cx - rx, cy - ry, rx * 2, ry * 2)
+    c.clipPath(p, stroke=0, fill=0)
+    c.radialGradient(cx + hx * rx, cy + hy * ry, max(rx, ry) * 1.45,
+                     [col(shade(fill, lift)), col(shade(fill, drop))],
+                     extend=True)
+    c.restoreState()
+
+
+def rim(c, pts, color="#FFFFFF", alpha=0.22, lw=2.6, frac=0.45, tension=1.0):
+    """A soft highlight along the upper-left edge of a shape."""
+    if not RICH:
+        return
+    n = max(2, int(len(pts) * frac))
+    seg = pts[:n + 1]
+    c.saveState()
+    c.setLineCap(1)
+    c.setStrokeColor(col(color, alpha))
+    c.setStrokeAlpha(alpha)
+    c.setLineWidth(lw)
+    c.drawPath(_mkpath(c, seg, False, tension), stroke=1, fill=0)
+    c.restoreState()
+
+
+def vignette(c, w, h, strength=0.18, warm="#2A1E14"):
+    """Darken the page edges a little so the eye lands in the middle."""
+    edge_shade(c, w, h, strength, warm)
+
+
+def edge_shade(c, w, h, strength=0.18, warm="#2A1E14", bands=30):
+    """Soft inward falloff from all four page edges."""
+    if not RICH or strength <= 0:
+        return
+    dx, dy = w * 0.30, h * 0.36
+    for i in range(bands):
+        t = 1.0 - i / bands                       # 1 at the edge
+        a_ = strength * (t ** 1.7) / bands * 3.0
+        sx, sy = dx / bands, dy / bands
+        rect(c, 0, i * sy, w, sy, fill=warm, alpha=a_)
+        rect(c, 0, h - (i + 1) * sy, w, sy, fill=warm, alpha=a_)
+        rect(c, i * sx, 0, sx, h, fill=warm, alpha=a_)
+        rect(c, w - (i + 1) * sx, 0, sx, h, fill=warm, alpha=a_)
+
+
+def glow(c, cx, cy, r, color="#FFF0B8", strength=0.30, rings=7):
+    """A broad soft light -- sunlight spilling across a scene."""
+    if not RICH:
+        return
+    for i in range(rings):
+        k = 1.0 - i / rings
+        circle(c, cx, cy, r * k, fill=color, alpha=strength / rings)
+
+
+def light_wash(c, w, h, cx=None, cy=None, color="#FFF3CE", strength=0.16,
+               rings=8):
+    """A broad warm highlight, as if the whole page were lit from above."""
+    if not RICH:
+        return
+    cx = w * 0.62 if cx is None else cx
+    cy = h * 0.86 if cy is None else cy
+    for i in range(rings):
+        k = 1.0 - i / rings
+        ellipse(c, cx, cy, w * 0.82 * k, h * 0.78 * k, fill=color,
+                alpha=strength / rings)
+
+
+def grain(c, w, h, n=900, seed=97, alpha=0.030):
+    """Barely-there speckle so large flats read as paper, not screen."""
+    if not RICH:
+        return
+    rnd = _rng(seed)
+    for _ in range(n):
+        r = 0.7 + 1.5 * rnd()
+        circle(c, rnd() * w, rnd() * h, r,
+               fill="#3A2A1E" if rnd() > 0.45 else "#FFFFFF", alpha=alpha)
+
+
+def speckle(c, x, y, w, h, color, n=70, seed=1, r0=1.0, r1=2.6, alpha=0.16):
+    """Faint dappling -- keeps big flat areas from looking like paper."""
+    if not RICH:
+        return
+    rnd = _rng(seed)
+    for _ in range(n):
+        circle(c, x + w * rnd(), y + h * rnd(), r0 + (r1 - r0) * rnd(),
+               fill=color, alpha=alpha)
+
+
 def stroke_path(c, pts, color="ink", lw=2.0, tension=1.0, cap=1, alpha=None):
     """Smooth open line (whiskers, ropes, motion lines...)."""
     c.saveState()
     c.setLineCap(cap)
     c.setStrokeColor(col(color, alpha))
+    c.setStrokeAlpha(1.0 if alpha is None else alpha)
     c.setLineWidth(lw)
     p = c.beginPath()
     p.moveTo(*pts[0])
@@ -218,8 +362,11 @@ def taper(c, pts, w0, w1, fill="fur", stroke=None, lw=1.4):
 
 def shadow(c, cx, cy, rx, ry=None, alpha=0.13):
     """Soft contact shadow under a figure or object."""
-    ellipse(c, cx, cy, rx, ry if ry is not None else rx * 0.26,
-            fill="#000000", alpha=alpha)
+    ry = ry if ry is not None else rx * 0.26
+    ellipse(c, cx, cy, rx * 1.14, ry * 1.14, fill="#2A1E14", alpha=alpha * 0.55)
+    ellipse(c, cx, cy, rx, ry, fill="#2A1E14", alpha=alpha)
+    ellipse(c, cx, cy - ry * 0.12, rx * 0.62, ry * 0.6, fill="#2A1E14",
+            alpha=alpha * 0.5)
 
 
 def star(c, cx, cy, r, points=5, fill="gold", inner=0.45, rot=0.0):
@@ -243,6 +390,7 @@ def sparkle(c, cx, cy, r, color="#FFFFFF", alpha=0.9):
 def sky(c, x, y, w, h, top="sky_day", bottom="sky_soft", bands=64):
     """Vertical gradient wash."""
     ct, cb = col(top), col(bottom)
+    c.setFillAlpha(1.0)
     for i in range(bands):
         t = i / (bands - 1)
         c.setFillColorRGB(ct.red + (cb.red - ct.red) * t,
@@ -263,6 +411,10 @@ def cloud(c, cx, cy, s=1.0, fill="cloud", alpha=0.95):
         ellipse(c, cx + dx * s, cy + dy * s, rr * s, rr * s * 0.82,
                 fill=fill, alpha=alpha)
     rect(c, cx - 40 * s, cy - 12 * s, 82 * s, 13 * s, fill=fill, alpha=alpha)
+    if RICH:
+        for dx, dy, rr in ((-24, -6, 13), (-4, -3, 17), (18, -6, 13)):
+            ellipse(c, cx + dx * s, cy + dy * s, rr * s, rr * s * 0.5,
+                    fill=shade(fill, 0.93), alpha=alpha * 0.55)
 
 
 def hills(c, x, y, w, base_h, color="grass_dk", bumps=3, seedoff=0.0, alpha=None):
@@ -273,16 +425,33 @@ def hills(c, x, y, w, base_h, color="grass_dk", bumps=3, seedoff=0.0, alpha=None
         py = y + base_h * (0.55 + 0.45 * math.sin(seedoff + t * 3.1))
         pts.append((px, py))
     pts.append((x + w + 10, y - 6))
-    blob(c, pts, fill=color, alpha=alpha, tension=0.9)
+    if alpha is None:
+        grad_fill(c, pts, color, tension=0.9, lift=1.10, drop=0.92)
+    else:
+        blob(c, pts, fill=color, alpha=alpha, tension=0.9)
 
 
 def ground(c, x, y, w, h, color="grass", top_color=None):
-    rect(c, x, y, w, h, fill=color)
+    if RICH and h > MIN_GRAD:
+        c.saveState()
+        c.setFillAlpha(1.0)
+        c.setStrokeAlpha(1.0)
+        p = c.beginPath()
+        p.rect(x, y, w, h)
+        c.clipPath(p, stroke=0, fill=0)
+        c.linearGradient(0, y, 0, y + h,
+                         [col(shade(color, 0.86)), col(shade(color, 1.06))],
+                         extend=True)
+        c.restoreState()
+    else:
+        rect(c, x, y, w, h, fill=color)
     if top_color:
         blob(c, [(x - 5, y + h - 14), (x + w * 0.25, y + h - 4),
                  (x + w * 0.55, y + h - 16), (x + w * 0.8, y + h - 5),
                  (x + w + 5, y + h - 12), (x + w + 5, y - 5), (x - 5, y - 5)],
              fill=top_color, tension=0.8)
+        speckle(c, x, y, w, h * 0.92, shade(color, 0.82), n=int(w / 9) + 20,
+                seed=int(abs(y)) + 3, r0=1.2, r1=3.4, alpha=0.13)
 
 
 def grass_tufts(c, x0, x1, y, n=14, color="grass_dk", h=9, seed=1):
@@ -302,12 +471,14 @@ def tree(c, x, y, s=1.0, trunk="wood_dk", leaf="grass_dk", leaf2="grass"):
           7 * s, 4.5 * s, fill=trunk)
     for dx, dy, rr, cl in ((-20, 66, 24, leaf), (18, 62, 21, leaf),
                            (0, 84, 27, leaf2), (-8, 60, 20, leaf2)):
-        ellipse(c, x + dx * s, y + dy * s, rr * s, rr * s * 0.9, fill=cl)
+        grad_disc(c, x + dx * s, y + dy * s, rr * s, rr * s * 0.9, cl,
+                  lift=1.16, drop=0.86)
 
 
 def bush(c, x, y, s=1.0, color="grass_dk"):
     for dx, dy, rr in ((-14, 2, 14), (0, 8, 17), (15, 1, 13)):
-        ellipse(c, x + dx * s, y + dy * s, rr * s, rr * s * 0.85, fill=color)
+        grad_disc(c, x + dx * s, y + dy * s, rr * s, rr * s * 0.85, color,
+                  lift=1.15, drop=0.87)
 
 
 def flower(c, x, y, s=1.0, petal="#FFFFFF", eye="gold"):
@@ -346,9 +517,12 @@ def shade(hex_or_name, k=0.82):
     return "#%02X%02X%02X" % (f(r), f(g), f(b))
 
 
-def _ol(c, pts, fill, lw=LW, tension=1.0):
+def _ol(c, pts, fill, lw=LW, tension=1.0, shine=True):
     """Filled + outlined smooth shape -- the house style for characters."""
-    blob(c, pts, fill=fill, stroke=LINE, lw=lw, tension=tension)
+    grad_fill(c, pts, fill, tension=tension)
+    if shine:
+        rim(c, pts, alpha=0.21, lw=lw * 1.6, tension=tension)
+    blob(c, pts, fill=None, stroke=LINE, lw=lw, tension=tension)
 
 
 def _cat_hat(c):
@@ -720,7 +894,8 @@ def draw_person(c, x, y, s=1.0, flip=False, robe="jack_old", trim=None,
 
     # neck + head
     rect(c, -5, 74, 10, 9, fill=shade(skin, 0.92))
-    circle(c, 0, 93, 15, fill=skin, stroke=LINE, lw=LW)
+    grad_disc(c, 0, 93, 15, 15, skin, lift=1.10, drop=0.90)
+    circle(c, 0, 93, 15, fill=None, stroke=LINE, lw=LW)
 
     if braid:
         taper(c, [(-13, 100), (-24, 84), (-27, 62), (-22, 46)], 5.5, 3.0,
@@ -870,7 +1045,8 @@ def draw_ogre(c, x, y, s=1.0, flip=False, expr="grin", arm_l="out",
     taper(c, pts, 10.5, 8, fill=skin, stroke=LINE, lw=LW)
     circle(c, pts[-1][0], pts[-1][1], 9, fill=skin, stroke=LINE, lw=1.3)
 
-    circle(c, 0, 106, 27, fill=skin, stroke=LINE, lw=LW)
+    grad_disc(c, 0, 106, 27, 27, skin, lift=1.10, drop=0.90)
+    circle(c, 0, 106, 27, fill=None, stroke=LINE, lw=LW)
     for sx in (-1, 1):
         _ol(c, [(sx * 26, 112), (sx * 34, 106), (sx * 26, 98), (sx * 22, 105)],
             skin, tension=0.6)
@@ -924,7 +1100,8 @@ def draw_lion(c, x, y, s=1.0, flip=False, shad=True):
         a = i * 2 * math.pi / 18
         ellipse(c, 30 + 27 * math.cos(a), 58 + 27 * math.sin(a), 11.5, 9.5,
                 fill="#8A5A2B", stroke=LINE, lw=1.1)
-    circle(c, 30, 58, 24, fill="#E3B370", stroke=LINE, lw=LW)
+    grad_disc(c, 30, 58, 24, 24, "#E3B370", lift=1.12, drop=0.90)
+    circle(c, 30, 58, 24, fill=None, stroke=LINE, lw=LW)
     for sx in (-1, 1):
         _ol(c, [(30 + sx * 17, 82), (30 + sx * 24, 76), (30 + sx * 15, 70)],
             "#C98A3C", tension=0.6)

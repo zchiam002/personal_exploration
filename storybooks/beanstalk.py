@@ -269,22 +269,22 @@ def s07_the_castle_door(c):
 
 def s08_fee_fi_fo_fum(c):
     interior(c, wall="#C9B69A", floor="#8A6743", horizon=318)
-    rect(c, 96, 336, 150, 190, fill="#5E7A98", r=70, stroke="wood_dk", lw=5)
-    stroke_path(c, [(171, 336), (171, 526)], color="wood_dk", lw=3.4)
+    rect(c, 76, 344, 140, 178, fill="#5E7A98", r=66, stroke="wood_dk", lw=5)
+    stroke_path(c, [(146, 344), (146, 522)], color="wood_dk", lw=3.4)
     table(c, 600, 200, 1.5, w=150)
     giant(c, 470, 196, 2.5, expr="grin", arm_l="out", arm_r="up")
-    # the great cooking pot, with a boy in it
+    # the great cooking pot, with a boy in it: he goes in first, then the pot
+    shadow(c, 210, 198, 96, 17, alpha=0.15)
+    jack(c, 210, 214, 1.55, expr="surprised", arm_l="hip", arm_r="hip",
+         shad=False)
     c.saveState()
-    c.translate(196, 196)
-    shadow(c, 0, 2, 92, 16, alpha=0.15)
+    c.translate(210, 196)
     _ol(c, [(-78, 6), (-88, 82), (0, 102), (88, 82), (78, 6)], "#565049",
         tension=0.85)
     _ol(c, [(-92, 88), (0, 112), (92, 88), (86, 76), (0, 98), (-86, 76)],
         "#6E6760", tension=0.7)
     c.restoreState()
-    jack(c, 196, 300, 1.5, expr="surprised", arm_l="hip", arm_r="hip",
-         shad=False)
-    layout.bold_left(c, 96, 236, "FEE  FI  FO  FUM", 27, "#7A5A3E")
+    layout.bold_left(c, 96, 246, "FEE  FI  FO  FUM", 26, "#8A6A4A")
 
 
 def s09_counting_gold(c):

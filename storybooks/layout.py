@@ -13,7 +13,8 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen.canvas import Canvas
 
-from art import col, rect, stroke_path, star, shadow
+from art import (col, rect, stroke_path, star, shadow, vignette,
+                 light_wash, grain)
 
 W, H = landscape(A4)       # 841.89 x 595.28 pt
 BASE = 200                 # ground line: where characters put their feet
@@ -133,6 +134,8 @@ def text_panel(c, text, size=None, lead=None, pad=22, margin=None, bottom=30):
     c.restoreState()
     rect(c, x, y, W - 2 * margin, h, fill="cream", r=20,
          stroke="#E3D3B0", lw=1.4)
+    rect(c, x + 6, y + 6, W - 2 * margin - 12, h - 12, fill=None,
+         stroke="#EFE2C6", lw=1.0, r=15)
 
     c.setFillColor(col("ink"))
     c.setFont(F, size)
@@ -214,9 +217,17 @@ def back_quote(c, lines, y=534, accent="#7A3B2E"):
         star(c, W / 2 + sx * 300, y - 14, 10, fill="gold")
 
 
+def _atmosphere(c, vig=0.18):
+    """The finishing pass laid over every illustration: warm light, a little
+    paper grain, and darkened page edges."""
+    # a light wash over the whole page just bleaches it; keep the finishing
+    # pass to edge falloff only
+    vignette(c, W, H, vig)
+
+
 # ------------------------------------------------------------------ build ---
 
-def build(book, lang="en", outdir=None):
+def build(book, lang="en", outdir=None, suffix=""):
     """
     Render one title.
 
@@ -231,7 +242,7 @@ def build(book, lang="en", outdir=None):
     accent = getattr(book, "ACCENT", "#7A3B2E")
     outdir = outdir or OUT
     os.makedirs(outdir, exist_ok=True)
-    path = os.path.join(outdir, f"{book.SLUG}{cfg['suffix']}.pdf")
+    path = os.path.join(outdir, f"{book.SLUG}{cfg['suffix']}{suffix}.pdf")
 
     c = Canvas(path, pagesize=(W, H))
     c.setTitle(txt["TITLE"])
@@ -239,6 +250,7 @@ def build(book, lang="en", outdir=None):
     c.setSubject("A printable picture book")
 
     book.COVER_ART(c)
+    _atmosphere(c, 0.16)
     title_plate(c, txt["TITLE"], txt["SUBTITLE"], accent=accent)
     c.showPage()
 
@@ -249,15 +261,18 @@ def build(book, lang="en", outdir=None):
         f"{book.SLUG}: {len(book.SCENES)} scenes vs {len(txt['PAGES'])} texts")
     for i, page in enumerate(txt["PAGES"]):
         book.SCENES[i](c)
+        _atmosphere(c, 0.18)
         text_panel(c, page)
         folio(c, i + 1)
         c.showPage()
 
     book.END_ART(c)
+    _atmosphere(c, 0.16)
     end_plate(c, txt["THE_END"], accent)
     c.showPage()
 
     book.BACK_ART(c)
+    _atmosphere(c, 0.16)
     back_quote(c, txt["BACK_QUOTE"],
                accent=getattr(book, "BACK_ACCENT", accent))
     c.showPage()

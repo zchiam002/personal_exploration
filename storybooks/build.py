@@ -14,12 +14,15 @@ BOOKS = [puss_in_boots, beanstalk, beauty, mulan, sleeping_beauty,
          red_riding_hood]
 
 
+SUFFIX = "-v2"          # v1 PDFs are kept under pdf/v1/
+
+
 def main(only=None):
     for book in BOOKS:
         if only and book.SLUG not in only:
             continue
         for lang in book.TEXT:
-            print("wrote", layout.build(book, lang))
+            print("wrote", layout.build(book, lang, suffix=SUFFIX))
 
 
 if __name__ == "__main__":

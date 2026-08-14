@@ -4,15 +4,18 @@ A small shelf of children's picture books, generated from source. Every
 illustration is original vector art drawn with reportlab paths, so there are no
 image files, nothing is downloaded, and the PDFs print crisply at any size.
 
+`pdf/` holds the current **v2** artwork; `pdf/v1/` keeps the earlier flat
+rendering for comparison.
+
 | File | Title | Pages |
 | --- | --- | --- |
-| `pdf/puss-in-boots.pdf` | Puss in Boots | 22 |
-| `pdf/puss-in-boots-zh.pdf` | 穿靴子的猫 (Simplified Chinese) | 22 |
-| `pdf/jack-and-the-beanstalk.pdf` | Jack and the Beanstalk | 18 |
-| `pdf/beauty-and-the-beast.pdf` | Beauty and the Beast | 18 |
-| `pdf/hua-mulan.pdf` | Hua Mulan | 18 |
-| `pdf/sleeping-beauty.pdf` | Sleeping Beauty | 18 |
-| `pdf/little-red-riding-hood.pdf` | Little Red Riding Hood | 18 |
+| `pdf/puss-in-boots-v2.pdf` | Puss in Boots | 22 |
+| `pdf/puss-in-boots-zh-v2.pdf` | 穿靴子的猫 (Simplified Chinese) | 22 |
+| `pdf/jack-and-the-beanstalk-v2.pdf` | Jack and the Beanstalk | 18 |
+| `pdf/beauty-and-the-beast-v2.pdf` | Beauty and the Beast | 18 |
+| `pdf/hua-mulan-v2.pdf` | Hua Mulan | 18 |
+| `pdf/sleeping-beauty-v2.pdf` | Sleeping Beauty | 18 |
+| `pdf/little-red-riding-hood-v2.pdf` | Little Red Riding Hood | 18 |
 
 ## Printing
 
@@ -38,6 +41,25 @@ python3 build.py hua-mulan        # just one
 
 Fonts are system fonts: DejaVu Serif for English, WenQuanYi Zen Hei for
 Chinese. Both are already present on most Linux boxes.
+
+## v2 rendering
+
+The shapes are unchanged from v1; what changed is how they are painted:
+
+- **Gradient fills.** Every outlined character shape is filled with a soft
+  vertical gradient instead of a flat colour, so bodies, clothing and props
+  have volume. Round forms (heads, foliage) use a radial gradient lit from the
+  upper left.
+- **Rim light.** A faint highlight runs along the upper-left edge of each
+  shape.
+- **Deeper contact shadows.** Three stacked ellipses instead of one flat disc.
+- **Ground and hills** are graded and lightly dappled rather than flat slabs.
+- **Edge vignette** on every page so the eye lands in the middle.
+- **An alpha bug fixed.** `paint()` never reset transparency, so any shape
+  drawn after a translucent one inherited its alpha and rendered washed out.
+  Colours across all six books are noticeably richer as a result.
+
+Set `art.RICH = False` to get the flat v1 look back from the same source.
 
 ## How it is put together
 
