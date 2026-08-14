@@ -1,323 +1,136 @@
-"""
-Builds `Puss-in-Boots.pdf` -- a printable picture book.
-
-    python3 book.py
-
-Page size is A4 landscape, one scene per page, full-bleed art with a cream
-text panel across the foot of the page.
-"""
+"""Puss in Boots -- after Charles Perrault (1697)."""
 
 import math
-import os
 
-from reportlab.lib.pagesizes import A4, landscape
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfgen.canvas import Canvas
+from art import *          # noqa: F401,F403
+from art import _rng, _ol, _sack, _boot, _cat_hat, LINE, LW, P
+from scenery import *      # noqa: F401,F403
+import layout
+from layout import W, H, BASE, bold_left
 
-from art import *          # noqa: F401,F403  -- the illustration toolkit
-from art import _rng, _ol, _sack, _boot, _cat_hat   # not exported by *
-import story
-import story_zh
+SLUG = "puss-in-boots"
+ACCENT = "#7A3B2E"
 
-W, H = landscape(A4)       # 841.89 x 595.28 pt
-BASE = 200                 # ground line: where characters put their feet
-HERE = os.path.dirname(os.path.abspath(__file__))
-
-pdfmetrics.registerFont(TTFont(
-    "Story", "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"))
-pdfmetrics.registerFont(TTFont(
-    "Story-Bold", "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"))
-# WenQuanYi Zen Hei is the one CJK face on this box; it ships only a regular
-# weight, so headings in the Mandarin edition are emboldened by overprinting.
-pdfmetrics.registerFont(TTFont(
-    "Han", "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc", subfontIndex=0))
-
-LANGS = {
-    "en": dict(txt=story, font="Story", bold="Story-Bold", faux=False,
-               size=16.5, lead=24.5, cjk=False, out="Puss-in-Boots.pdf"),
-    "zh": dict(txt=story_zh, font="Han", bold="Han", faux=True,
-               size=18.5, lead=31, cjk=True, out="Puss-in-Boots-zh.pdf"),
+TEXT = {
+    "en": {'TITLE': 'Puss in Boots',
+     'SUBTITLE': 'an old fairy tale, told again',
+     'BYLINE': 'after the story by Charles Perrault',
+     'BELONGS_TO': 'This book belongs to',
+     'PAGES': ['There was once a miller with three sons. When he grew old he '
+               'left the mill to the eldest, and the donkey to the second, '
+               'and to the youngest, Jack, he left only the cat.',
+               '“Oh dear,” said Jack. “What good is a cat to me?”\n'
+               'The cat looked up. “A great deal of good,” he said. “Bring '
+               'me a sack, and a fine pair of boots, and you shall see.”',
+               'Jack was so astonished that he sat straight down in the '
+               'straw. But he found the boots — red ones, with turned-down '
+               'tops — and the cat pulled them on and stood up tall.',
+               'He put a feather in his hat. He looked at himself for a long '
+               'moment. Then he purred.\n'
+               'And from that day, everybody called him Puss in Boots.',
+               'Off went Puss to the meadow. He propped his sack open, '
+               'dropped in two fat carrots, and lay so still that a beetle '
+               'walked over his paw.\n'
+               'Along came a plump young rabbit — and snap went the sack.',
+               'Puss marched all the way to the palace and bowed very low '
+               'before the King.\n'
+               '“A gift for Your Majesty,” he said, “from my master, the '
+               'Marquis of Carabas.”',
+               'Now, there was no such person as the Marquis of Carabas. '
+               'Puss had made him up on the road.\n'
+               'But the gifts kept coming — partridges on Monday, fish on '
+               'Friday — and the King grew very curious indeed.',
+               'One morning Puss heard that the King would ride along the '
+               'river, with the Princess beside him.\n'
+               'He ran home faster than the wind. “Master! Quick! Go and '
+               'swim in the river!”',
+               'Jack thought this was a very silly plan. But in he went.\n'
+               'And while he splashed about, Puss hid his old clothes under '
+               'a stone and began to shout: “Help! Help! My master is '
+               'drowning!”',
+               'The royal coach stopped at once. Servants pulled Jack out, '
+               'dripping wet.\n'
+               '“A thief has run off with his fine clothes,” said Puss '
+               'sadly. So the King lent him a coat of blue velvet.',
+               'The Princess thought he looked rather nice.\n'
+               '“Ride with us,” said the King. And Jack climbed into the '
+               'golden coach, hardly believing a moment of it.\n'
+               'Puss ran on ahead.',
+               'He came to great fields of wheat, where the haymakers were '
+               'working in the sun.\n'
+               '“When the King asks whose land this is,” said Puss, “you '
+               'will say it belongs to the Marquis of Carabas.”\n'
+               'And so they did.',
+               'On ran Puss, until he came to a castle. Inside lived an '
+               'Ogre, who owned every field for miles around.\n'
+               'Puss knocked politely. “I hear that you can do magic,” he '
+               'said. “Is it true?”',
+               '“Watch this!” roared the Ogre — and with a POOF he turned '
+               'into a lion.\n'
+               'Puss leapt to the top of the cupboard. His heart went thump, '
+               'thump, thump.\n'
+               'But he smiled all the same.',
+               '“Very fine,” said Puss. “But a big beast is easy. I don’t '
+               'suppose you could manage something tiny? A mouse, perhaps?”\n'
+               '“Easy!” squeaked the Ogre. And poof — a mouse.',
+               'Puss chased him out of the door, down the steps and away '
+               'over the hill, and the Ogre was never seen again.\n'
+               'Then Puss dusted off his boots and went to wait at the gate.',
+               'When the coach came rumbling up, Puss bowed low.\n'
+               '“Welcome, Your Majesty, to the castle of the Marquis of '
+               'Carabas!”\n'
+               'The King was amazed. The Princess laughed. Jack could not '
+               'say a word.',
+               'So Jack married the Princess, and Puss was made a lord, with '
+               'a red cushion of his own beside the fire.\n'
+               'He never had to chase a mouse again — though now and then, '
+               'just for the fun of it, he did.'],
+     'THE_END': 'The End',
+     'COLOPHON': 'A retelling of Charles Perrault’s “Le Maître Chat, ou le '
+                 'Chat Botté”, first printed in 1697.\n'
+                 'Illustrations drawn as vector art. Made to be read aloud.',
+     'BACK_QUOTE': ['“Bring me a sack, and a fine pair of boots,',
+                    'and you shall see.”']},
+    "zh": {'TITLE': '穿靴子的猫',
+     'SUBTITLE': '一个古老的童话',
+     'BYLINE': '改编自夏尔·佩罗的故事',
+     'BELONGS_TO': '这本书属于',
+     'PAGES': ['从前有一个磨坊主，他有三个儿子。他年纪大了，就把磨坊留给老大，把驴子留给老二。留给最小的儿子杰克的，只有一只猫。',
+               '“唉，”杰克说，“一只猫有什么用呢？”\n猫抬起头来说：“用处大着呢。给我一个口袋，再给我一双漂亮的靴子，你就知道了。”',
+               '杰克惊讶得一屁股坐在了稻草上。不过他还是找来了靴子——红色的，靴口是翻下来的。猫穿上靴子，站得直直的。',
+               '他在帽子上插了一根羽毛，对着自己看了好久，然后满意地打起呼噜来。\n从那天起，大家都叫他“穿靴子的猫”。',
+               '猫来到草地上。他把口袋撑开，放进两根胖萝卜，然后一动不动地趴着，连甲虫爬过他的爪子都没有动。\n'
+               '一只肥肥的小兔子跳了过来——啪的一声，口袋合上了。',
+               '猫一路走到王宫，对国王深深地鞠了一躬。\n“陛下，”他说，“这是我的主人卡拉巴斯侯爵送给您的礼物。”',
+               '其实，世界上根本没有什么卡拉巴斯侯爵，这是猫在路上编出来的。\n'
+               '可是礼物一件接一件地送来：星期一送鹧鸪，星期五送鱼。国王越来越好奇了。',
+               '一天早上，猫听说国王要沿着河边出游，公主也一起去。\n他跑回家，跑得比风还快。“主人！快！快到河里去游泳！”',
+               '杰克觉得这个主意真傻，可他还是下了水。\n'
+               '他在水里扑腾的时候，猫把他的旧衣服藏到了一块石头下面，然后大声喊起来：“救命啊！我的主人快淹死啦！”',
+               '王家的马车立刻停了下来。仆人们把浑身湿透的杰克拉了上来。\n'
+               '“有个小偷把他漂亮的衣服偷走了。”猫难过地说。于是国王借给他一件蓝色天鹅绒外衣。',
+               '公主觉得他看上去挺好看的。\n“跟我们一起坐车吧。”国王说。杰克坐进金马车，简直不敢相信这是真的。\n猫抢先跑到了前面。',
+               '他跑到一大片麦田，割麦子的人正在太阳底下干活。\n'
+               '“要是国王问这是谁的地，”猫说，“你们就说，是卡拉巴斯侯爵的。”\n'
+               '他们真的照做了。',
+               '猫一直往前跑，跑到了一座城堡。城堡里住着一个食人魔，方圆几里的田地都是他的。\n'
+               '猫很有礼貌地敲了敲门。“听说您会变魔法，”他说，“是真的吗？”',
+               '“你看好了！”食人魔大吼一声——砰的一下，变成了一头狮子。\n猫一下子跳到柜子顶上，心里怦怦怦直跳。\n可他还是笑着。',
+               '“真厉害，”猫说，“不过变大家伙容易。您能不能变个小的？比如说，一只老鼠？”\n'
+               '“这有什么难的！”食人魔尖声说。砰——变成了一只老鼠。',
+               '猫把老鼠一路追出门，追下台阶，追过山坡，从此再也没有人见过那个食人魔。\n然后猫掸了掸靴子上的灰，走到大门口去等着。',
+               '马车咕噜咕噜开过来的时候，猫深深地鞠了一躬。\n'
+               '“陛下，欢迎光临卡拉巴斯侯爵的城堡！”\n'
+               '国王惊呆了，公主笑了，杰克一句话也说不出来。',
+               '后来，杰克娶了公主，猫也当上了大臣，还在壁炉边有了一个自己的红垫子。\n'
+               '他再也不用去抓老鼠了——不过偶尔，为了好玩，他还是会去抓一抓。'],
+     'THE_END': '完',
+     'COLOPHON': '改编自夏尔·佩罗一六九七年的童话《穿靴子的猫》。\n插图为矢量绘制。适合大声朗读。',
+     'BACK_QUOTE': ['“给我一个口袋，再给我一双漂亮的靴子，', '你就知道了。”']},
 }
 
-TXT = story                # current text module
-F, FB = "Story", "Story-Bold"
-FAUX_BOLD = False
-BODY_SIZE, BODY_LEAD, CJK = 16.5, 24.5, False
 
-
-def set_lang(lang):
-    global TXT, F, FB, FAUX_BOLD, BODY_SIZE, BODY_LEAD, CJK
-    cfg = LANGS[lang]
-    TXT, F, FB = cfg["txt"], cfg["font"], cfg["bold"]
-    FAUX_BOLD, CJK = cfg["faux"], cfg["cjk"]
-    BODY_SIZE, BODY_LEAD = cfg["size"], cfg["lead"]
-    return cfg
-
-
-def bold_centred(c, x, y, text, size, color):
-    """Heading text; overprinted when the face has no real bold."""
-    c.setFont(FB, size)
-    c.setFillColor(col(color))
-    c.drawCentredString(x, y, text)
-    if FAUX_BOLD:
-        for dx, dy in ((0.8, 0), (0, 0.6), (0.8, 0.6)):
-            c.drawCentredString(x + dx, y + dy, text)
-
-
-def bold_left(c, x, y, text, size, color):
-    c.setFont(FB, size)
-    c.setFillColor(col(color))
-    c.drawString(x, y, text)
-    if FAUX_BOLD:
-        for dx, dy in ((0.8, 0), (0, 0.6), (0.8, 0.6)):
-            c.drawString(x + dx, y + dy, text)
-
-
-# ------------------------------------------------------------------ text ---
-
-# punctuation that may not begin a line, and that may not end one
-NO_LINE_START = "\u3002\uff0c\u3001\uff1b\uff1a\uff1f\uff01\uff09\u300b\u300d\u300f\u201d\u2019\uff65\u2014\u2026"
-NO_LINE_END = "\uff08\u300a\u300c\u300e\u201c\u2018"
-
-
-def wrap(text, font, size, maxw):
-    """Word-wrap, honouring explicit newlines in the source text."""
-    out = []
-    for para in text.split("\n"):
-        line = ""
-        for word in para.split():
-            trial = f"{line} {word}".strip()
-            if pdfmetrics.stringWidth(trial, font, size) <= maxw:
-                line = trial
-            else:
-                if line:
-                    out.append(line)
-                line = word
-        out.append(line)
-    return out
-
-
-def wrap_cjk(text, font, size, maxw):
-    """Break Chinese text by character, keeping punctuation off line starts."""
-    out = []
-    for para in text.split("\n"):
-        line = ""
-        for ch in para:
-            if pdfmetrics.stringWidth(line + ch, font, size) <= maxw:
-                line += ch
-                continue
-            # the character does not fit: push the line, but never let a
-            # closing mark start the next one, nor an opening mark end this one
-            if ch in NO_LINE_START and line:
-                out.append(line[:-1])
-                line = line[-1] + ch
-            elif line and line[-1] in NO_LINE_END:
-                out.append(line[:-1])
-                line = line[-1] + ch
-            else:
-                out.append(line)
-                line = ch
-        out.append(line)
-    return out
-
-
-def text_panel(c, text, size=None, lead=None, pad=22, margin=None, bottom=30):
-    """Cream card across the foot of the page holding the story text."""
-    size = BODY_SIZE if size is None else size
-    lead = BODY_LEAD if lead is None else lead
-    margin = (54 if CJK else 62) if margin is None else margin
-    maxw = W - 2 * margin - 2 * pad
-    lines = (wrap_cjk if CJK else wrap)(text, F, size, maxw)
-    h = len(lines) * lead + 2 * pad - (lead - size) + 4
-    x, y = margin, bottom
-
-    c.saveState()
-    c.setFillColorRGB(0, 0, 0, 0.10)
-    c.roundRect(x + 3, y - 4, W - 2 * margin, h, 20, stroke=0, fill=1)
-    c.restoreState()
-    rect(c, x, y, W - 2 * margin, h, fill="cream", r=20,
-         stroke="#E3D3B0", lw=1.4)
-
-    c.setFillColor(col("ink"))
-    c.setFont(F, size)
-    ty = y + h - pad - size * 0.86
-    for ln in lines:
-        c.drawCentredString(W / 2, ty, ln)
-        ty -= lead
-    return y + h
-
-
-def folio(c, n):
-    """Discreet page number."""
-    c.setFont(F, 10)
-    c.setFillColor(col("#9C8B76"))
-    c.drawCentredString(W / 2, 18, str(n))
-
-
-# ----------------------------------------------------------- scene pieces ---
-
-def meadow(c, horizon=250, sky_top="sky_day", sky_bot="sky_soft",
-           g1="grass", g2="grass_lt", clouds=((150, 470, 1.0), (640, 505, 0.8)),
-           sunpos=(735, 495)):
-    sky(c, 0, horizon - 10, W, H - horizon + 10, sky_top, sky_bot)
-    if sunpos:
-        sun(c, *sunpos)
-    for cx, cy, s in clouds:
-        cloud(c, cx, cy, s)
-    hills(c, -20, horizon - 46, W + 40, 60, "#A9CE8E", bumps=4, seedoff=0.6)
-    hills(c, -20, horizon - 34, W + 40, 44, "grass_dk", bumps=3, seedoff=2.1)
-    ground(c, 0, 0, W, horizon, g1, g2)
-
-
-def interior(c, wall="#E8D6B8", floor="wood", horizon=250, beams=True):
-    rect(c, 0, horizon - 10, W, H - horizon + 10, fill=wall)
-    rect(c, 0, 0, W, horizon, fill=floor)
-    for i in range(-1, 14):
-        stroke_path(c, [(i * 64 - 20, 0), (i * 64 + 40, horizon)],
-                    color=shade("wood", 0.86), lw=2.0)
-    rect(c, 0, horizon - 16, W, 16, fill=shade("wood", 0.7))
-    if beams:
-        for bx in (120, 420, 720):
-            rect(c, bx - 13, horizon, 26, H - horizon, fill="wood_dk")
-        rect(c, 0, H - 42, W, 42, fill="wood_dk")
-
-
-def stone_hall(c, horizon=250):
-    rect(c, 0, horizon - 10, W, H - horizon + 10, fill="stone")
-    for row in range(7):
-        yy = horizon + 20 + row * 50
-        off = 0 if row % 2 == 0 else 44
-        for i in range(11):
-            rect(c, i * 88 + off - 60, yy, 84, 44, fill=shade("stone", 0.97),
-                 stroke=shade("stone", 0.88), lw=1.2)
-    rect(c, 0, 0, W, horizon, fill="#B9A98F")
-    for i in range(-1, 14):
-        rect(c, i * 70 - 20, 0, 66, horizon - 6, fill=shade("#B9A98F", 0.95),
-             stroke=shade("#B9A98F", 0.86), lw=1.2)
-
-
-def banner(c, x, y, w=54, h=120, color="cape", emblem="gold"):
-    poly(c, [(x - w / 2, y), (x + w / 2, y), (x + w / 2, y - h),
-             (x, y - h + 18), (x - w / 2, y - h)], fill=color,
-         stroke=LINE, lw=1.4)
-    circle(c, x, y - h * 0.45, w * 0.26, fill=emblem, stroke=LINE, lw=1.3)
-
-
-def throne(c, x, y, s=1.0):
-    c.saveState()
-    c.translate(x, y)
-    c.scale(s, s)
-    rect(c, -54, 0, 108, 22, fill="wood_dk", r=4, stroke=LINE, lw=1.5)
-    _ol(c, [(-46, 20), (-50, 120), (0, 138), (50, 120), (46, 20)], "cape_dk")
-    _ol(c, [(-38, 24), (-40, 96), (0, 108), (40, 96), (38, 24)], "cape")
-    for sx in (-1, 1):
-        rect(c, sx * 48 - 9, 20, 18, 66, fill="gold_dk", r=5, stroke=LINE, lw=1.4)
-        circle(c, sx * 48, 92, 9, fill="gold", stroke=LINE, lw=1.4)
-    rect(c, -48, 42, 96, 12, fill="gold", r=4, stroke=LINE, lw=1.3)
-    c.restoreState()
-
-
-def fireplace(c, x, y, s=1.0):
-    c.saveState()
-    c.translate(x, y)
-    c.scale(s, s)
-    rect(c, -110, 0, 220, 190, fill="stone_dk", stroke=LINE, lw=1.6)
-    for row in range(6):
-        for i in range(5):
-            rect(c, -106 + i * 43 + (0 if row % 2 else 20), 6 + row * 30, 40, 27,
-                 fill="stone", stroke=shade("stone", 0.87), lw=1.1)
-    rect(c, -120, 186, 240, 20, fill="wood_dk", r=4, stroke=LINE, lw=1.6)
-    _ol(c, [(-70, 0), (-76, 96), (0, 118), (76, 96), (70, 0)], "#3A3330")
-    for i, (rr, cl) in enumerate(((34, "#C0392B"), (25, "#E8862F"),
-                                  (15, "#F6C453"))):
-        blob(c, [(0, 6 + rr * 2.1), (rr * 0.72, 6 + rr * 0.7), (rr * 0.5, 6),
-                 (-rr * 0.5, 6), (-rr * 0.72, 6 + rr * 0.7)], fill=cl,
-             tension=0.75)
-    for lx in (-40, -12, 18):
-        rect(c, lx, 4, 46, 11, fill="wood_dk", r=5, stroke=LINE, lw=1.2)
-    c.restoreState()
-
-
-def cushion(c, x, y, s=1.0, color="cape"):
-    c.saveState()
-    c.translate(x, y)
-    c.scale(s, s)
-    _ol(c, [(-40, 4), (-44, 20), (0, 28), (44, 20), (40, 4), (0, -2)], color,
-        tension=0.8)
-    for sx in (-1, 1):
-        for sy in (0, 1):
-            star(c, sx * 34, 8 + sy * 12, 4, fill="gold")
-    c.restoreState()
-
-
-def cupboard(c, x, y, s=1.0):
-    c.saveState()
-    c.translate(x, y)
-    c.scale(s, s)
-    rect(c, -60, 0, 120, 210, fill="wood", stroke=LINE, lw=1.8)
-    rect(c, -66, 205, 132, 18, fill="wood_dk", r=3, stroke=LINE, lw=1.6)
-    for i in range(2):
-        rect(c, -52 + i * 54, 12, 48, 88, fill=shade("wood", 0.88),
-             stroke=LINE, lw=1.4, r=3)
-        rect(c, -52 + i * 54, 112, 48, 84, fill=shade("wood", 0.88),
-             stroke=LINE, lw=1.4, r=3)
-        circle(c, -32 + i * 54, 56, 3.6, fill="gold_dk")
-        circle(c, -32 + i * 54, 154, 3.6, fill="gold_dk")
-    c.restoreState()
-
-
-def road(c, y=BASE, color="path"):
-    blob(c, [(-20, y - 70), (W * 0.3, y - 34), (W * 0.66, y - 10),
-             (W + 20, y + 8), (W + 20, y - 96), (W * 0.5, y - 108),
-             (-20, y - 132)], fill=color, tension=0.85)
-
-
-def gift_pile(c, x, y):
-    """Partridges, fish and a rabbit heaped on a palace table."""
-    rect(c, x - 96, y, 192, 14, fill="wood", r=4, stroke=LINE, lw=1.5)
-    for dx in (-84, 84):
-        rect(c, x + dx - 6, y - 52, 12, 54, fill="wood_dk", stroke=LINE, lw=1.4)
-    # fish
-    for i, (dx, dy) in enumerate(((-58, 20), (-34, 16))):
-        c.saveState()
-        c.translate(x + dx, y + dy)
-        c.rotate(-8 + i * 12)
-        _ol(c, [(0, 0), (22, 10), (44, 2), (22, -10)], "#9FC3D8", tension=0.8)
-        poly(c, [(44, 2), (58, 12), (58, -8)], fill="#7FA8C4", stroke=LINE, lw=1.2)
-        circle(c, 12, 2, 2.2, fill="ink")
-        c.restoreState()
-    # partridge
-    c.saveState()
-    c.translate(x + 34, y + 16)
-    _ol(c, [(0, 0), (20, 8), (30, 24), (14, 32), (-8, 24), (-14, 10)],
-        "#B98A5E")
-    circle(c, 24, 34, 9, fill="#CBA37A", stroke=LINE, lw=1.3)
-    poly(c, [(32, 34), (44, 31), (32, 28)], fill="gold_dk", stroke=LINE, lw=1.1)
-    circle(c, 27, 36, 1.9, fill="ink")
-    c.restoreState()
-    draw_rabbit(c, x + 86, y + 14, 0.72, flip=True)
-
-
-def sparkles_around(c, cx, cy, r=90, n=9, seed=4):
-    rnd = _rng(seed)
-    for i in range(n):
-        a = i * 2 * math.pi / n + rnd() * 0.4
-        rr = r * (0.65 + 0.45 * rnd())
-        sparkle(c, cx + rr * math.cos(a), cy + rr * math.sin(a),
-                4 + 4 * rnd(), color="#FFF3C4", alpha=0.9)
-
-
-def motion(c, x, y, n=3, w=54, dy=13, color="#FFFFFF", alpha=0.55):
-    for i in range(n):
-        stroke_path(c, [(x, y + i * dy), (x - w * (0.7 + 0.3 * (i % 2)),
-                                          y + i * dy + 3)],
-                    color=color, lw=4.0, alpha=alpha)
-
-
-# ----------------------------------------------------------------- scenes ---
-
-def cover(c):
+def COVER_ART(c):
     sky(c, 0, 250, W, H - 250, "#F7C98B", "#FDE9C4")
     sun(c, 690, 500, 50)
     for cx, cy, s in ((140, 520, 1.2), (430, 556, 0.75), (720, 396, 0.9)):
@@ -340,32 +153,9 @@ def cover(c):
               sword=True, tail="curl", legs="stride")
     sparkles_around(c, 404, 300, 216, 7, seed=11)
 
-    c.saveState()
-    c.setFillColorRGB(0, 0, 0, 0.12)
-    c.roundRect(147, 464, 548, 112, 26, stroke=0, fill=1)
-    c.restoreState()
-    rect(c, 144, 468, 548, 112, fill="cream", r=26, stroke="#D9BE8A", lw=2.6)
-    rect(c, 156, 480, 524, 88, fill="cream", r=20, stroke="#E7D3AC", lw=1.2)
-    bold_centred(c, W / 2 - 5, 512, TXT.TITLE, 52, "#7A3B2E")
-    c.setFillColor(col("ink_soft"))
-    c.setFont(F, 15)
-    c.drawCentredString(W / 2 - 5, 486, TXT.SUBTITLE)
-    for sx in (-1, 1):
-        star(c, W / 2 - 5 + sx * 232, 524, 9, fill="gold")
 
-
-def nameplate(c):
-    rect(c, 0, 0, W, H, fill="#FBF3E2")
-    rect(c, 44, 40, W - 88, H - 80, fill=None, stroke="#DCC69B", lw=3.0, r=18)
-    rect(c, 56, 52, W - 112, H - 104, fill=None, stroke="#E8D6B4", lw=1.4, r=12)
-    for cx, cy in ((44, 40), (W - 44, 40), (44, H - 40), (W - 44, H - 40)):
-        star(c, cx, cy, 11, fill="#DCC69B")
-
-    bold_centred(c, W / 2, 486, TXT.TITLE, 32, "#7A3B2E")
-    c.setFillColor(col("ink_soft"))
-    c.setFont(F, 13.5)
-    c.drawCentredString(W / 2, 458, TXT.BYLINE)
-
+def NAMEPLATE_ART(c):
+    """The hat and one boot, waiting by the door."""
     c.saveState()
     c.translate(W / 2, 236)
     shadow(c, 0, 4, 168, 24, alpha=0.10)
@@ -382,16 +172,6 @@ def nameplate(c):
     _boot(c, 0, 0, 0)
     c.restoreState()
     c.restoreState()
-
-    c.setFillColor(col("ink_soft"))
-    c.setFont(F, 16)
-    c.drawCentredString(W / 2, 168, TXT.BELONGS_TO)
-    stroke_path(c, [(W / 2 - 200, 130), (W / 2 + 200, 130)],
-                color="#C9BA88", lw=1.8)
-    c.setFont(F, 12 if CJK else 10.5)
-    c.setFillColor(col("#9C8B76"))
-    for i, ln in enumerate(TXT.COLOPHON.split("\n")):
-        c.drawCentredString(W / 2, 92 - i * 17, ln)
 
 
 def s01_three_sons(c):
@@ -671,7 +451,8 @@ def s15_the_mouse(c):
     draw_mouse(c, 548, BASE, 2.2)
     draw_puss(c, 268, BASE, 1.62, expr="sly", arm_r="hip", arm_l="chin",
               legs="stand", tail="perk")
-    bold_left(c, 640, 452, TXT.POOF, 34, "#9C8B76")
+    bold_left(c, 640, 452, "砰！" if layout.CJK else "poof!", 34,
+              "#9C8B76")
 
 
 def s16_out_the_door(c):
@@ -738,7 +519,7 @@ def s18_happily_ever_after(c):
         c.restoreState()
 
 
-def the_end(c):
+def END_ART(c):
     interior(c, wall="#E0CDAE", floor="#A87E50", horizon=310, beams=False)
     rect(c, 0, H - 46, W, 46, fill="wood_dk")
     fireplace(c, 676, 310, 1.12)
@@ -764,16 +545,8 @@ def the_end(c):
     for zx, zy, zs in ((470, 402, 24), (506, 444, 31), (548, 494, 39)):
         bold_left(c, zx, zy, "z", zs, "#8A7A66")
 
-    c.saveState()
-    c.setFillColorRGB(0, 0, 0, 0.10)
-    c.roundRect(W / 2 - 155, 56, 320, 76, 22, stroke=0, fill=1)
-    c.restoreState()
-    rect(c, W / 2 - 158, 60, 320, 76, fill="cream", r=22, stroke="#D9BE8A",
-         lw=2.2)
-    bold_centred(c, W / 2 + 2, 88, TXT.THE_END, 34, "#7A3B2E")
 
-
-def back_cover(c):
+def BACK_ART(c):
     sky(c, 0, 0, W, H, "#F7C98B", "#FDE9C4")
     for cx, cy, s in ((180, 486, 1.05), (664, 516, 0.85)):
         cloud(c, cx, cy, s, fill="#FFF6E4")
@@ -785,10 +558,7 @@ def back_cover(c):
     tree(c, 748, 158, 1.05)
     draw_puss(c, 420, 156, 1.86, expr="wink", arm_r="doff", arm_l="hip",
               tail="curl", legs="stand")
-    for i, ln in enumerate(TXT.BACK_QUOTE):
-        bold_centred(c, W / 2, 534 - i * 30, ln, 22, "#7A3B2E")
-    for sx in (-1, 1):
-        star(c, W / 2 + sx * 300, 520, 10, fill="gold")
+
 
 SCENES = [
     s01_three_sons, s02_a_talking_cat, s03_the_boots, s04_feather_in_his_hat,
@@ -797,43 +567,3 @@ SCENES = [
     s13_the_ogres_castle, s14_the_lion, s15_the_mouse, s16_out_the_door,
     s17_welcome, s18_happily_ever_after,
 ]
-
-
-# ------------------------------------------------------------------ build ---
-
-def build(lang="en", path=None):
-    cfg = set_lang(lang)
-    path = path or os.path.join(HERE, cfg["out"])
-    c = Canvas(path, pagesize=(W, H))
-    c.setTitle(TXT.TITLE)
-    c.setAuthor("retold after Charles Perrault")
-    c.setSubject("A printable picture book")
-
-    cover(c)
-    c.showPage()
-    nameplate(c)
-    c.showPage()
-
-    assert len(SCENES) == len(TXT.PAGES), (
-        f"{len(SCENES)} scenes vs {len(TXT.PAGES)} texts")
-
-    for i, text in enumerate(TXT.PAGES):
-        SCENES[i](c)
-        text_panel(c, text)
-        folio(c, i + 1)
-        c.showPage()
-
-    the_end(c)
-    c.showPage()
-    back_cover(c)
-    c.showPage()
-
-    c.save()
-    return path
-
-
-if __name__ == "__main__":
-    import sys
-    langs = sys.argv[1:] or ["en", "zh"]
-    for lg in langs:
-        print("wrote", build(lg))
