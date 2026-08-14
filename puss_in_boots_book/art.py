@@ -329,113 +329,153 @@ def _ol(c, pts, fill, lw=LW, tension=1.0):
     blob(c, pts, fill=fill, stroke=LINE, lw=lw, tension=tension)
 
 
+def _round_state(c):
+    """Round joins and caps everywhere -- no sharp corners in cartoon linework."""
+    c.setLineJoin(1)
+    c.setLineCap(1)
+
+
 def _cat_hat(c):
     """Wide musketeer hat: swept brim, soft crown, one proud feather."""
     c.saveState()
-    c.translate(0, 21)
+    c.translate(0, 20)
     c.rotate(-7)
-    # feather (behind the crown)
-    blob(c, [(2, 6), (16, 22), (34, 32), (50, 27), (44, 14), (26, 7), (12, 2)],
+    blob(c, [(2, 6), (17, 23), (36, 34), (53, 29), (47, 15), (28, 7), (13, 2)],
          fill="feather", stroke=LINE, lw=1.4, tension=0.85)
-    stroke_path(c, [(4, 6), (22, 17), (46, 23)], color=shade("feather", 0.78),
+    stroke_path(c, [(4, 6), (23, 18), (49, 25)], color=shade("feather", 0.78),
                 lw=1.5)
-    # crown
-    _ol(c, [(-16, 2), (-13, 16), (0, 22), (13, 15), (16, 1), (0, 6)],
-        "hat", tension=0.9)
-    # brim, with an upturn on the left
-    _ol(c, [(-29, 5), (-25, 11), (-12, 5), (0, 6), (16, 4), (28, -2),
-            (14, -6), (0, -7), (-14, -5)], "hat_dk", tension=0.85)
-    # band
-    blob(c, [(-16, 3), (0, 7), (16, 2), (16, -1), (0, 4), (-16, 0)],
+    _ol(c, [(-17, 3), (-15, 13), (-8, 20), (0, 22), (8, 20), (15, 12),
+            (17, 2), (9, 6), (0, 7), (-9, 6)], "hat", tension=0.9)
+    _ol(c, [(-31, 5), (-27, 12), (-14, 6), (0, 7), (17, 5), (30, -2),
+            (15, -7), (0, -8), (-15, -6)], "hat_dk", tension=0.85)
+    blob(c, [(-17, 4), (0, 8), (17, 3), (17, 0), (0, 5), (-17, 1)],
          fill="gold_dk", tension=0.6)
-    circle(c, 11, 4, 3.0, fill="gold", stroke=LINE, lw=1.2)
+    circle(c, 12, 5, 3.0, fill="gold", stroke=LINE, lw=1.2)
+    c.restoreState()
+
+
+def _paw(c, x, y, r=6.4, ang=0.0, fill="fur_lt", thumb=True):
+    """A soft mitten paw -- rounded, with a thumb lobe."""
+    c.saveState()
+    c.translate(x, y)
+    c.rotate(ang)
+    _ol(c, [(0, r), (r * 0.95, r * 0.55), (r * 1.05, -r * 0.35),
+            (r * 0.4, -r), (-r * 0.55, -r * 0.95), (-r * 1.05, -r * 0.15),
+            (-r * 0.8, r * 0.6)], fill, tension=0.95)
+    if thumb:
+        _ol(c, [(-r * 0.5, r * 0.9), (-r * 1.25, r * 0.95),
+                (-r * 1.35, r * 0.2), (-r * 0.75, r * 0.1)], fill,
+            tension=0.9)
+    for k in (-0.35, 0.25):
+        stroke_path(c, [(r * 0.15 + k * r, -r * 0.95),
+                        (r * 0.25 + k * r, -r * 0.35)],
+                    color=shade(P.get(fill, fill), 0.8), lw=1.1)
     c.restoreState()
 
 
 def _cat_head(c, expr="happy", hat=True, tilt=0.0):
-    """Head assembly. Local origin sits at the base of the neck."""
+    """
+    Head assembly. Local origin is the centre of the cranium.
+
+    Built the way a cel-animation cat is built: round skull, a muzzle that
+    genuinely projects out in front of it, and big adjacent eyes.
+    """
     c.saveState()
-    c.translate(0, 90)
+    c.translate(0, 116)
     c.rotate(tilt)
+    _round_state(c)
 
-
-    # skull
-    _ol(c, [(0, 21), (17, 16), (21, 0), (14, -16), (0, -20),
-            (-14, -16), (-21, 0), (-17, 16)], "fur")
-    # cheek fluff
+    # cranium -- a soft egg, wider at the top than the jaw
+    _ol(c, [(0, 21), (13, 19), (20, 10), (21, -3), (15, -14), (0, -18),
+            (-15, -14), (-21, -3), (-20, 10), (-13, 19)], "fur", tension=0.95)
+    # cheek fluff, breaking the silhouette
     for sx in (-1, 1):
-        blob(c, [(sx * 13, -6), (sx * 22, -10), (sx * 17, -17), (sx * 9, -15)],
-             fill="fur_lt", tension=0.7)
+        _ol(c, [(sx * 15, -5), (sx * 24, -8), (sx * 21, -15), (sx * 12, -16)],
+            "fur", tension=0.85)
     # forehead tabby marks
-    for dx, hh in ((-6, 6), (0, 7.5), (6, 6)):
-        stroke_path(c, [(dx, 10), (dx * 1.2, 10 + hh)], color="fur_dk", lw=2.4)
+    for dx, hh in ((-6.5, 6), (0, 8), (6.5, 6)):
+        stroke_path(c, [(dx, 11), (dx * 1.25, 11 + hh)], color="fur_dk", lw=2.6)
+    # a soft top highlight for volume
+    blob(c, [(-3, 20), (10, 16), (13, 9), (2, 13), (-9, 15)],
+         fill="#FFFFFF", alpha=0.14, tension=0.9)
 
-    # muzzle
-    blob(c, [(0, -3), (11, -5), (13, -12), (6, -17), (0, -15), (-6, -17),
-             (-13, -12), (-11, -5)], fill="belly", tension=0.85)
+    # ---- muzzle: two jowl lobes with a dip between them
+    _ol(c, [(0, -2), (12, -5), (18, -12), (13, -19), (5, -20), (0, -15),
+            (-5, -20), (-13, -19), (-18, -12), (-12, -5)], "belly",
+        tension=0.95)
 
-    # eyes
+    # ---- eyes: big, adjacent, with a brow ridge
     if expr in ("closed", "sleep"):
         for sx in (-1, 1):
-            stroke_path(c, [(sx * 3.5, 3), (sx * 8, 6), (sx * 12.5, 3)],
-                        color="ink", lw=2.0)
+            stroke_path(c, [(sx * 2.5, 5), (sx * 8.5, 9), (sx * 14.5, 5)],
+                        color="ink", lw=2.2)
     else:
-        look = {"sly": (1.2, -0.4), "scheme": (1.4, 0.0), "proud": (0, 0.9),
-                "sad": (0, -1.0), "brave": (0, 0.4), "aside": (-1.6, -0.2)
+        look = {"sly": (1.6, -0.6), "scheme": (1.9, 0.0), "proud": (0, 1.2),
+                "sad": (0, -1.3), "brave": (0, 0.6), "aside": (-2.0, -0.3)
                 }.get(expr, (0, 0))
-        ew, eh = (7.0, 8.2) if expr == "surprised" else (6.0, 7.0)
+        ew, eh = (9.2, 11.0) if expr == "surprised" else (8.2, 9.8)
         for sx in (-1, 1):
             if expr == "wink" and sx == 1:
-                stroke_path(c, [(4, 3), (8, 6.4), (12.5, 3)], color="ink", lw=2.0)
+                stroke_path(c, [(3, 5), (8.5, 9.5), (14, 5)], color="ink", lw=2.2)
                 continue
-            ellipse(c, sx * 8.5, 2, ew, eh, fill="#FFFFFF", stroke=LINE, lw=1.2)
-            ellipse(c, sx * 8.5 + look[0], 2 + look[1], 3.6, 5.0, fill="#3F8F5E")
-            ellipse(c, sx * 8.5 + look[0], 1.6 + look[1], 2.2, 3.9, fill="ink")
-            circle(c, sx * 8.5 + look[0] - 1.9, 4.4 + look[1], 1.7, fill="#FFFFFF")
-            circle(c, sx * 8.5 + look[0] + 1.7, -0.4 + look[1], 0.9,
+            ellipse(c, sx * 8.4, 6, ew, eh, fill="#FFFFFF", stroke=LINE, lw=1.4)
+            ellipse(c, sx * 8.4 + look[0], 6 + look[1], 4.2, 5.6, fill="#3F8F5E")
+            ellipse(c, sx * 8.4 + look[0], 5.4 + look[1], 2.6, 4.4, fill="ink")
+            circle(c, sx * 8.4 + look[0] - 2.2, 8.6 + look[1], 2.0, fill="#FFFFFF")
+            circle(c, sx * 8.4 + look[0] + 2.0, 2.6 + look[1], 1.0,
                    fill="#FFFFFF", alpha=0.85)
-            if expr in ("sly", "scheme"):   # half-closed schemer lids
-                blob(c, [(sx * 8.5 - ew - 0.6, 2.5), (sx * 8.5, 6.5),
-                         (sx * 8.5 + ew + 0.6, 2.0), (sx * 8.5 + ew + 0.6, eh + 4),
-                         (sx * 8.5 - ew - 0.6, eh + 4)], fill="fur", tension=0.6)
-                stroke_path(c, [(sx * 8.5 - ew, 2.6), (sx * 8.5, 6.4),
-                                (sx * 8.5 + ew, 2.1)], color=LINE, lw=1.5)
-        if expr == "sad":
+            if expr in ("sly", "scheme"):
+                blob(c, [(sx * 8.4 - ew - 0.7, 7), (sx * 8.4, 11.4),
+                         (sx * 8.4 + ew + 0.7, 6.4),
+                         (sx * 8.4 + ew + 0.7, eh + 9),
+                         (sx * 8.4 - ew - 0.7, eh + 9)], fill="fur",
+                     tension=0.6)
+                stroke_path(c, [(sx * 8.4 - ew, 7.1), (sx * 8.4, 11.3),
+                                (sx * 8.4 + ew, 6.5)], color=LINE, lw=1.7)
+        # brows
+        if expr in ("sad",):
             for sx in (-1, 1):
-                stroke_path(c, [(sx * 3, 12), (sx * 8, 10), (sx * 13, 11.5)],
-                            color="ink_soft", lw=1.7)
-        if expr == "surprised":
+                stroke_path(c, [(sx * 2, 23), (sx * 8, 20), (sx * 15, 21.5)],
+                            color="fur_dk", lw=2.4)
+        elif expr in ("surprised",):
             for sx in (-1, 1):
-                stroke_path(c, [(sx * 4, 13), (sx * 9, 15), (sx * 14, 13)],
-                            color="ink_soft", lw=1.7)
+                stroke_path(c, [(sx * 3, 22.5), (sx * 9, 26), (sx * 15, 22.5)],
+                            color="fur_dk", lw=2.4)
+        elif expr in ("sly", "scheme", "proud"):
+            for sx in (-1, 1):
+                stroke_path(c, [(sx * 2.5, 22.5), (sx * 9, 24),
+                                (sx * 15.5, 20.5)], color="fur_dk", lw=2.4)
 
-    # nose & mouth
-    poly(c, [(0, -4.5), (3.4, -0.6), (-3.4, -0.6)], fill="#D9727A", stroke=LINE,
-         lw=1.1)
+    # ---- nose and mouth
+    _ol(c, [(0, 1), (5.4, -2), (4.8, -6.6), (0, -8.8), (-4.8, -6.6),
+            (-5.4, -2)], "#D9727A", tension=0.95)
+    blob(c, [(-1.7, -0.6), (1.5, -1.6), (0.5, -3.8)], fill="#FFFFFF",
+         alpha=0.45, tension=0.9)
     if expr == "surprised":
-        ellipse(c, 0, -10, 3.6, 4.6, fill="#8E3B3F")
+        _ol(c, [(0, -10), (5, -12), (6, -17), (0, -20), (-6, -17), (-5, -12)],
+            "#8E3B3F", tension=0.95)
     elif expr == "sad":
-        stroke_path(c, [(-5, -11), (0, -8), (5, -11)], color="ink", lw=1.8)
+        stroke_path(c, [(-6, -16), (0, -12), (6, -16)], color="ink", lw=2.0)
     else:
-        stroke_path(c, [(0, -4.5), (0, -7.5)], color="ink", lw=1.8)
-        stroke_path(c, [(-6.5, -6.5), (-3.4, -10.2), (0, -8.0)], color="ink", lw=1.9)
-        stroke_path(c, [(0, -8.0), (3.4, -10.2), (6.5, -6.5)], color="ink", lw=1.9)
+        stroke_path(c, [(0, -8.8), (0, -11.5)], color="ink", lw=2.0)
+        stroke_path(c, [(-8.5, -10), (-4, -14.5), (0, -12)], color="ink", lw=2.1)
+        stroke_path(c, [(0, -12), (4, -14.5), (8.5, -10)], color="ink", lw=2.1)
 
-    # whiskers
+    # whiskers, springing from the jowls
     for sx in (-1, 1):
-        for dy, dr in ((-7, 3.0), (-10.5, 0.0)):
-            stroke_path(c, [(sx * 12, dy), (sx * 20, dy + dr),
-                            (sx * 28, dy + dr * 1.8)], color="ink_soft", lw=1.2)
+        for dy, dr in ((-7, 3.4), (-11, 0.4)):
+            stroke_path(c, [(sx * 16, dy), (sx * 25, dy + dr),
+                            (sx * 34, dy + dr * 1.9)], color="ink_soft", lw=1.3)
 
     if hat:
         _cat_hat(c)
 
     # ears last, so the hat never swallows them
     for sx in (-1, 1):
-        _ol(c, [(sx * 8, 13), (sx * 14, 31), (sx * 22, 12), (sx * 16, 6)],
-            "fur", tension=0.45)
-        blob(c, [(sx * 12, 13), (sx * 15, 24), (sx * 19, 12)],
-             fill="#F2AE93", tension=0.45)
+        _ol(c, [(sx * 6, 15), (sx * 15, 32), (sx * 24, 16), (sx * 17, 11)],
+            "fur", tension=0.5)
+        blob(c, [(sx * 11, 16), (sx * 15.5, 26), (sx * 20, 16)],
+             fill="#EFA88C", tension=0.5)
     c.restoreState()
 
 
@@ -444,12 +484,167 @@ def _boot(c, x, y, rot=0.0):
     c.saveState()
     c.translate(x, y)
     c.rotate(rot)
-    _ol(c, [(-7.5, 4), (-8.5, 20), (7.5, 21), (6.5, 4)], "boot", tension=0.5)
-    _ol(c, [(-9.5, 0), (-10.5, 7), (8, 8), (15, 5), (14, 0), (0, -2)],
-        "boot", tension=0.5)
-    _ol(c, [(-11, 17), (-12.5, 30), (11, 31), (10, 16)], "boot_dk", tension=0.5)
-    rect(c, -10, 3.5, 18, 4.2, fill="gold_dk", r=1.8, stroke=LINE, lw=1.1)
-    blob(c, [(-5, 9), (-1, 18), (3, 9)], fill="#FFFFFF", alpha=0.16, tension=0.7)
+    _round_state(c)
+    _ol(c, [(-7.5, 5), (-8.5, 18), (8, 19), (7, 5)], "boot", tension=0.7)
+    _ol(c, [(-9.5, 1), (-10.5, 7), (-4, 9), (8, 9), (16, 6), (17, 1),
+            (10, -1.5), (0, -2)], "boot", tension=0.9)
+    _ol(c, [(-9.5, 14), (-11, 26), (10, 27), (9, 13)], "boot_dk",
+        tension=0.7)
+    rect(c, -10, 4, 19, 4.4, fill="gold_dk", r=2.0, stroke=LINE, lw=1.1)
+    blob(c, [(-5, 10), (-1.5, 18), (2.5, 10)], fill="#FFFFFF", alpha=0.18,
+         tension=0.9)
+    c.restoreState()
+
+
+def draw_puss(c, x, y, s=1.0, flip=False, expr="happy", hat=True,
+              cape=True, boots=True, sack=None, sword=False,
+              arm_l=None, arm_r=None, tail="curl", lean=0.0, tilt=0.0,
+              legs="stand", shad=True):
+    """
+    Draw Puss in Boots.
+
+    arm_l / arm_r : a named preset, or a list of (x, y) spine points in local
+                    units measured from the shoulder. arm_l is his far arm.
+    legs          : 'stand' | 'stride' | 'run' | 'sit' | 'leap' | 'bow'
+    tail          : 'curl' | 'up' | 'swish' | 'down' | 'perk'
+    """
+    c.saveState()
+    c.translate(x, y)
+    c.scale(-s if flip else s, s)
+    _round_state(c)
+    if shad:
+        shadow(c, 0, 2, 36, 9, alpha=0.14)
+    c.scale(0.92, 0.92)          # the redesign is taller; match the old height
+    c.rotate(lean)
+
+    # Long, curving arms ending in mitten paws. Third value is the paw angle.
+    ARMS = {
+        "down":  ([(0, 0), (7, -18), (11, -36)], -8),
+        "out":   ([(0, 0), (17, -8), (33, -11)], 12),
+        "up":    ([(0, 0), (13, 15), (19, 34)], 18),
+        "point": ([(0, 0), (20, 5), (39, 14)], 8),
+        "hip":   ([(0, 0), (17, -13), (7, -27)], 40),
+        "hold":  ([(0, 0), (14, -13), (26, -20)], 0),
+        "sweep": ([(0, 0), (18, 3), (33, -9)], -18),
+        "chin":  ([(0, 0), (16, -9), (10, 6)], 55),
+        "wave":  ([(0, 0), (15, 14), (18, 34)], 22),
+        "hug":   ([(0, 0), (14, -10), (3, -19)], 60),
+        "doff":  ([(0, 0), (17, 10), (29, 27)], 26),
+    }
+
+    def _arm(spec, default):
+        if spec is None:
+            return ARMS[default]
+        if isinstance(spec, str):
+            return ARMS[spec]
+        return (spec, 0)
+
+    al, al_ang = _arm(arm_l, "down")
+    ar, ar_ang = _arm(arm_r, "hip")
+
+    # ---- tail: one long smooth sweep, thick at the root
+    TAILS = {
+        "curl":  [(-15, 48), (-37, 48), (-53, 58), (-57, 78), (-46, 88)],
+        "up":    [(-15, 48), (-37, 58), (-49, 80), (-43, 102)],
+        "perk":  [(-15, 48), (-36, 66), (-36, 92), (-21, 106)],
+        "swish": [(-15, 48), (-38, 42), (-58, 40), (-71, 54)],
+        "down":  [(-15, 46), (-38, 34), (-57, 26)],
+    }
+    tp = TAILS.get(tail, TAILS["curl"])
+    taper(c, tp, 5.2, 2.2, fill="fur", stroke=LINE, lw=LW)
+    for i in (1, 2, 3):
+        if i < len(tp) - 1:
+            px, py = tp[i]
+            circle(c, px, py, 3.6 - i * 0.6, fill="fur_dk", alpha=0.5)
+    circle(c, tp[-1][0], tp[-1][1], 2.8, fill="fur_lt", stroke=LINE, lw=1.2)
+
+    # ---- cape, behind the body
+    if cape:
+        _ol(c, [(-19, 90), (-32, 76), (-34, 58), (-30, 46), (0, 40),
+                (30, 46), (34, 58), (32, 76), (19, 90)], "cape_dk",
+            tension=0.92)
+        blob(c, [(-13, 87), (-22, 72), (-20, 50), (8, 46), (11, 72), (4, 87)],
+             fill="cape", tension=0.92)
+
+    # ---- legs
+    if legs == "run":
+        legpts = [([(-8, 48), (-22, 34), (-35, 24)], -35, 24, -34),
+                  ([(8, 48), (19, 30), (23, 7)], 23, 7, 18)]
+    elif legs == "stride":
+        legpts = [([(-8, 48), (-18, 29), (-25, 9)], -25, 9, -14),
+                  ([(8, 48), (16, 29), (18, 7)], 18, 7, 6)]
+    elif legs == "leap":
+        legpts = [([(-8, 48), (-25, 44), (-40, 46)], -40, 46, -54),
+                  ([(8, 48), (22, 38), (32, 38)], 32, 38, 32)]
+    elif legs == "sit":
+        legpts = [([(-10, 42), (-24, 22), (-33, 8)], -33, 8, -26),
+                  ([(10, 42), (23, 20), (31, 6)], 31, 6, 22)]
+    elif legs == "bow":
+        legpts = [([(-10, 48), (-21, 28), (-29, 8)], -29, 8, -18),
+                  ([(8, 48), (16, 29), (18, 7)], 18, 7, 5)]
+    else:  # stand
+        legpts = [([(-11, 46), (-16, 26), (-18, 5)], -18, 5, -4),
+                  ([(11, 46), (16, 26), (18, 5)], 18, 5, 4)]
+    for spine, bx, by, rot in legpts:
+        taper(c, spine, 7.2, 5.6, fill="fur", stroke=LINE, lw=LW)
+        if boots:
+            _boot(c, bx, by, rot)
+        else:
+            _paw(c, bx, by - 4, 7.0, rot, fill="fur_lt", thumb=False)
+
+    # ---- far arm, behind the body
+    pts = [(-px - 18, py + 84) for px, py in al]
+    taper(c, pts, 5.6, 4.2, fill=shade("fur", 0.9), stroke=LINE, lw=LW)
+    _paw(c, pts[-1][0], pts[-1][1], 6.0, -al_ang, fill=shade("fur_lt", 0.9))
+
+    # ---- body: a pear, wide at the hips, tucked at the waist
+    _ol(c, [(0, 94), (15, 90), (20, 80), (17, 68), (21, 55), (16, 46),
+            (0, 43), (-16, 46), (-21, 55), (-17, 68), (-20, 80), (-15, 90)],
+        "fur", tension=0.95)
+    blob(c, [(1, 87), (10, 78), (9, 64), (4, 56), (-4, 56), (-8, 66),
+             (-8, 78)], fill="belly", tension=0.95)
+    # underside shading gives the shape some roundness
+    blob(c, [(-19, 54), (0, 44), (19, 54), (15, 49), (0, 46), (-15, 49)],
+         fill="#000000", alpha=0.06, tension=0.9)
+    for dy in (62, 72, 82):
+        stroke_path(c, [(-19, dy), (-13, dy + 3), (-8, dy)],
+                    color="fur_dk", lw=2.8)
+
+    if cape:
+        _ol(c, [(-21, 88), (0, 81), (21, 88), (16, 95), (0, 89), (-16, 95)],
+            "cape", tension=0.8)
+
+    _ol(c, [(-20, 53), (0, 48), (20, 53), (20, 45), (0, 40), (-20, 45)],
+        "belt", tension=0.7)
+    rect(c, -6, 43, 12, 10, fill="gold", r=2.0, stroke=LINE, lw=1.2)
+
+    if sword:
+        # a scabbard slung back off the belt, not a cane across the belly
+        c.saveState()
+        c.translate(-19, 50)
+        c.rotate(206)
+        taper(c, [(0, 0), (22, 2), (42, 1)], 3.8, 2.4, fill="belt",
+              stroke=LINE, lw=1.2)
+        circle(c, 42, 1, 2.6, fill="gold_dk", stroke=LINE, lw=1.0)
+        c.restoreState()
+        c.saveState()
+        c.translate(-19, 50)
+        c.rotate(26)
+        rect(c, 0, -1.4, 11, 2.8, fill="#C9CDD4", r=1.4, stroke=LINE, lw=1.0)
+        rect(c, 10, -4.4, 3.4, 8.8, fill="gold_dk", r=1.4, stroke=LINE, lw=1.0)
+        rect(c, 13, -1.8, 9, 3.6, fill="belt", r=1.8, stroke=LINE, lw=1.0)
+        circle(c, 23, 0, 2.8, fill="gold", stroke=LINE, lw=1.0)
+        c.restoreState()
+
+    # ---- near arm, over the body
+    pts = [(px + 18, py + 84) for px, py in ar]
+    taper(c, pts, 5.8, 4.4, fill="fur", stroke=LINE, lw=LW)
+    _paw(c, pts[-1][0], pts[-1][1], 6.3, ar_ang, fill="fur_lt")
+
+    _cat_head(c, expr=expr, hat=hat, tilt=tilt)
+
+    if sack:
+        _sack(c, *sack)
     c.restoreState()
 
 
@@ -470,135 +665,6 @@ def _sack(c, sx, sy, size=1.0, bulge=True, color="parchment"):
     c.restoreState()
 
 
-def draw_puss(c, x, y, s=1.0, flip=False, expr="happy", hat=True,
-              cape=True, boots=True, sack=None, sword=False,
-              arm_l=None, arm_r=None, tail="curl", lean=0.0, tilt=0.0,
-              legs="stand", shad=True):
-    """
-    Draw Puss in Boots.
-
-    arm_l / arm_r : a named preset, or a list of (x, y) spine points in local
-                    units measured from the shoulder. arm_l is his far arm.
-    legs          : 'stand' | 'stride' | 'run' | 'sit' | 'leap' | 'bow'
-    tail          : 'curl' | 'up' | 'swish' | 'down' | 'perk'
-    """
-    c.saveState()
-    c.translate(x, y)
-    c.scale(-s if flip else s, s)
-    if shad:
-        shadow(c, 0, 2, 36, 9, alpha=0.14)
-    c.rotate(lean)
-
-    ARMS = {
-        "down":  [(0, 0), (9, -14), (12, -28)],
-        "out":   [(0, 0), (18, -6), (32, -6)],
-        "up":    [(0, 0), (13, 12), (18, 28)],
-        "point": [(0, 0), (20, 6), (36, 14)],
-        "hip":   [(0, 0), (15, -11), (7, -22)],
-        "hold":  [(0, 0), (14, -10), (24, -16)],
-        "sweep": [(0, 0), (17, 4), (30, -6)],
-        "chin":  [(0, 0), (14, -6), (9, 6)],
-        "wave":  [(0, 0), (15, 11), (17, 28)],
-        "hug":   [(0, 0), (13, -8), (4, -16)],
-        "doff":  [(0, 0), (16, 8), (26, 22)],
-    }
-    al = ARMS.get(arm_l, arm_l) if arm_l is not None else ARMS["down"]
-    ar = ARMS.get(arm_r, arm_r) if arm_r is not None else ARMS["hip"]
-
-    # ---- tail, well clear of the body so it actually reads
-    TAILS = {
-        "curl":  [(-15, 38), (-33, 44), (-43, 62), (-38, 80)],
-        "up":    [(-15, 38), (-31, 52), (-37, 74), (-28, 92)],
-        "perk":  [(-15, 38), (-30, 56), (-25, 78), (-11, 90)],
-        "swish": [(-15, 36), (-36, 32), (-55, 30), (-68, 44)],
-        "down":  [(-15, 34), (-36, 24), (-53, 16)],
-    }
-    tp = TAILS.get(tail, TAILS["curl"])
-    taper(c, tp, 6.2, 3.0, fill="fur", stroke=LINE, lw=LW)
-    for i in (1, 2, 3):                      # tail rings
-        if i < len(tp):
-            px, py = tp[i]
-            circle(c, px, py, 3.6 - i * 0.5, fill="fur_dk", alpha=0.55)
-    circle(c, tp[-1][0], tp[-1][1], 3.2, fill="fur_lt", stroke=LINE, lw=1.2)
-
-    # ---- cape, behind the body
-    if cape:
-        _ol(c, [(-19, 77), (-34, 63), (-32, 42), (0, 36), (32, 42),
-                (34, 63), (19, 77)], "cape_dk", tension=0.85)
-        blob(c, [(-13, 74), (-21, 60), (-18, 45), (7, 42), (9, 62), (3, 74)],
-             fill="cape", tension=0.85)
-
-    # ---- legs
-    if legs == "run":
-        legpts = [([(-8, 34), (-21, 20), (-33, 13)], -33, 13, -34),
-                  ([(8, 34), (18, 18), (22, 5)], 22, 5, 20)]
-    elif legs == "stride":
-        legpts = [([(-8, 34), (-17, 19), (-23, 5)], -23, 5, -12),
-                  ([(8, 34), (15, 19), (17, 5)], 17, 5, 7)]
-    elif legs == "leap":
-        legpts = [([(-8, 34), (-24, 30), (-37, 34)], -37, 34, -54),
-                  ([(8, 34), (21, 25), (30, 27)], 30, 27, 32)]
-    elif legs == "sit":
-        legpts = [([(-9, 28), (-21, 16), (-29, 8)], -29, 8, -28),
-                  ([(9, 28), (20, 15), (27, 7)], 27, 7, 24)]
-    elif legs == "bow":
-        legpts = [([(-9, 34), (-19, 19), (-26, 5)], -26, 5, -18),
-                  ([(8, 34), (15, 19), (17, 5)], 17, 5, 5)]
-    else:  # stand
-        legpts = [([(-11, 34), (-15, 18), (-16, 4)], -16, 4, -4),
-                  ([(11, 34), (15, 18), (16, 4)], 16, 4, 4)]
-    for spine, bx, by, rot in legpts:
-        taper(c, spine, 7.5, 6.0, fill="fur", stroke=LINE, lw=LW)
-        if boots:
-            _boot(c, bx, by, rot)
-        else:
-            ellipse(c, bx, by - 5, 8.5, 5.5, fill="fur_lt", stroke=LINE, lw=LW)
-
-    # ---- far arm, behind the body
-    pts = [(-px - 15, py + 63) for px, py in al]
-    taper(c, pts, 5.2, 4.0, fill=shade("fur", 0.9), stroke=LINE, lw=LW)
-    circle(c, pts[-1][0], pts[-1][1], 4.6, fill=shade("fur_lt", 0.92),
-           stroke=LINE, lw=1.3)
-
-    # ---- body
-    _ol(c, [(0, 78), (18, 69), (22, 50), (18, 34), (0, 29),
-            (-18, 34), (-22, 50), (-18, 69)], "fur")
-    blob(c, [(1, 71), (11, 59), (13, 43), (6, 32), (-4, 32), (-10, 43),
-             (-11, 59)], fill="belly", tension=0.9)
-    for dy in (40, 50, 60):
-        stroke_path(c, [(-20, dy), (-14, dy + 3), (-10, dy)],
-                    color="fur_dk", lw=2.8)
-
-    if cape:   # collar, in front
-        _ol(c, [(-20, 74), (0, 68), (20, 74), (15, 80), (0, 75), (-15, 80)],
-            "cape", tension=0.7)
-
-    # ---- belt
-    _ol(c, [(-19, 37), (0, 32), (19, 37), (19, 30), (0, 25), (-19, 30)],
-        "belt", tension=0.6)
-    rect(c, -5.5, 27, 11, 9, fill="gold", r=1.8, stroke=LINE, lw=1.2)
-
-    if sword:
-        c.saveState()
-        c.translate(-20, 30)
-        c.rotate(26)
-        rect(c, 0, -1.8, 44, 3.6, fill="#C9CDD4", r=1.8, stroke=LINE, lw=1.1)
-        rect(c, -9, -3, 10, 6, fill="belt", r=2.4, stroke=LINE, lw=1.1)
-        circle(c, -10, 0, 3.6, fill="gold", stroke=LINE, lw=1.1)
-        c.restoreState()
-
-    # ---- near arm, over the body
-    pts = [(px + 15, py + 63) for px, py in ar]
-    taper(c, pts, 5.4, 4.2, fill="fur", stroke=LINE, lw=LW)
-    circle(c, pts[-1][0], pts[-1][1], 4.8, fill="fur_lt", stroke=LINE, lw=1.3)
-
-    _cat_head(c, expr=expr, hat=hat, tilt=tilt)
-
-    if sack:
-        _sack(c, *sack)
-    c.restoreState()
-
-
 # ---------------------------------------------------------------- people ---
 
 def draw_person(c, x, y, s=1.0, flip=False, robe="jack_old", trim=None,
@@ -610,23 +676,30 @@ def draw_person(c, x, y, s=1.0, flip=False, robe="jack_old", trim=None,
     c.saveState()
     c.translate(x, y)
     c.scale(-s if flip else s, s)
+    _round_state(c)
     if shad:
         shadow(c, 0, 2, 28, 7.5, alpha=0.13)
 
     sleeve = shade(robe, 0.86)
 
     ARMS = {
-        "down":  [(0, 0), (9, -14), (12, -27)],
-        "out":   [(0, 0), (16, -8), (28, -11)],
-        "up":    [(0, 0), (11, 10), (14, 26)],
-        "point": [(0, 0), (18, 3), (32, 9)],
-        "hip":   [(0, 0), (12, -11), (5, -21)],
-        "hold":  [(0, 0), (12, -13), (21, -18)],
-        "wave":  [(0, 0), (12, 9), (13, 26)],
-        "reach": [(0, 0), (18, 7), (32, 3)],
-        "clasp": [(0, 0), (10, -14), (-2, -19)],
+        "down":  ([(0, 0), (9, -16), (13, -32)], -6),
+        "out":   ([(0, 0), (17, -9), (31, -13)], 14),
+        "up":    ([(0, 0), (12, 12), (16, 30)], 16),
+        "point": ([(0, 0), (19, 3), (35, 10)], 8),
+        "hip":   ([(0, 0), (14, -13), (6, -25)], 42),
+        "hold":  ([(0, 0), (13, -15), (23, -21)], 0),
+        "wave":  ([(0, 0), (13, 11), (15, 30)], 20),
+        "reach": ([(0, 0), (20, 8), (35, 4)], -8),
+        "clasp": ([(0, 0), (11, -16), (-1, -22)], 60),
     }
-    al, ar = ARMS.get(arm_l, arm_l), ARMS.get(arm_r, arm_r)
+
+    def _arm(spec, dflt):
+        if spec is None:
+            return ARMS[dflt]
+        return ARMS[spec] if isinstance(spec, str) else (spec, 0)
+
+    (al, al_ang), (ar, ar_ang) = _arm(arm_l, "down"), _arm(arm_r, "down")
 
     if cloak:
         _ol(c, [(-17, 72), (-30, 44), (-27, 12), (0, 6), (27, 12), (30, 44),
@@ -641,15 +714,14 @@ def draw_person(c, x, y, s=1.0, flip=False, robe="jack_old", trim=None,
         lp = [[(-6, 26), (-7, 15), (-7, 5)], [(6, 26), (7, 15), (7, 5)]]
     for spine in lp:
         taper(c, spine, 5.6, 4.4, fill="#6B584B", stroke=LINE, lw=1.4)
-        _ol(c, [(spine[-1][0] - 6, 5), (spine[-1][0] - 7, 0),
-                (spine[-1][0] + 8, 0), (spine[-1][0] + 8, 5)],
-            "#40342C", tension=0.4)
+        fx = spine[-1][0]
+        _ol(c, [(fx - 6, 7), (fx - 7, 1), (fx + 2, -1), (fx + 10, 2),
+                (fx + 9, 7)], "#40342C", tension=0.9)
 
     # far arm
     pts = [(-px - 15, py + 62) for px, py in al]
-    taper(c, pts, 5.4, 4.2, fill=shade(sleeve, 0.9), stroke=LINE, lw=1.4)
-    circle(c, pts[-1][0], pts[-1][1], 4.6, fill=shade(skin, 0.93), stroke=LINE,
-           lw=1.2)
+    taper(c, pts, 4.8, 3.8, fill=shade(sleeve, 0.9), stroke=LINE, lw=1.4)
+    _paw(c, pts[-1][0], pts[-1][1], 5.0, -al_ang, fill=shade(skin, 0.93))
 
     # tunic / robe -- shoulders, waist, hem
     _ol(c, [(0, 76), (16, 71), (14, 44), (24, 14), (0, 10), (-24, 14),
@@ -663,8 +735,8 @@ def draw_person(c, x, y, s=1.0, flip=False, robe="jack_old", trim=None,
 
     # near arm, over the robe
     pts = [(px + 15, py + 62) for px, py in ar]
-    taper(c, pts, 5.6, 4.4, fill=sleeve, stroke=LINE, lw=1.4)
-    circle(c, pts[-1][0], pts[-1][1], 4.8, fill=skin, stroke=LINE, lw=1.2)
+    taper(c, pts, 5.0, 4.0, fill=sleeve, stroke=LINE, lw=1.4)
+    _paw(c, pts[-1][0], pts[-1][1], 5.2, ar_ang, fill=skin)
 
     if wet:
         for dx in (-13, -3, 8, 17):
@@ -673,7 +745,8 @@ def draw_person(c, x, y, s=1.0, flip=False, robe="jack_old", trim=None,
 
     # neck + head
     rect(c, -5, 74, 10, 9, fill=shade(skin, 0.92))
-    circle(c, 0, 93, 15, fill=skin, stroke=LINE, lw=LW)
+    _ol(c, [(0, 108), (11, 105), (16, 95), (14, 84), (0, 78), (-14, 84),
+            (-16, 95), (-11, 105)], skin, tension=0.95)
 
     if long_hair:
         _ol(c, [(0, 110), (18, 100), (21, 72), (13, 66), (11, 88), (0, 94),
@@ -684,11 +757,19 @@ def draw_person(c, x, y, s=1.0, flip=False, robe="jack_old", trim=None,
     # face
     for sx in (-1, 1):
         if expr == "closed":
-            stroke_path(c, [(sx * 2.5, 95), (sx * 5.5, 96.8), (sx * 8.5, 95)],
-                        color="ink", lw=1.6)
+            stroke_path(c, [(sx * 2, 95), (sx * 5.5, 97.2), (sx * 9, 95)],
+                        color="ink", lw=1.7)
         else:
-            circle(c, sx * 5.5, 95, 2.1, fill="ink")
-            circle(c, sx * 5.5 - 0.8, 95.9, 0.9, fill="#FFFFFF")
+            ellipse(c, sx * 5.3, 95, 3.4, 4.2, fill="#FFFFFF", stroke=LINE,
+                    lw=1.1)
+            dy = {"sad": -0.9, "surprised": 0.4}.get(expr, 0)
+            circle(c, sx * 5.3, 94.6 + dy, 1.9, fill="ink")
+            circle(c, sx * 5.3 - 0.7, 95.5 + dy, 0.85, fill="#FFFFFF")
+            brow = {"sad": (99.5, 101.5), "surprised": (102, 102)}.get(
+                expr, (100.8, 99.8))
+            stroke_path(c, [(sx * 1.8, brow[0]), (sx * 5.5, brow[1] + 0.6),
+                            (sx * 9, brow[1] - 0.4)],
+                        color=shade(hair, 0.9), lw=1.7)
     ellipse(c, -10, 89, 3.2, 2.1, fill="#E79A9A", alpha=0.6)
     ellipse(c, 10, 89, 3.2, 2.1, fill="#E79A9A", alpha=0.6)
     if beard:
@@ -727,14 +808,16 @@ def draw_ogre(c, x, y, s=1.0, flip=False, expr="grin", arm_l="out",
     c.saveState()
     c.translate(x, y)
     c.scale(-s if flip else s, s)
+    _round_state(c)
     if shad:
         shadow(c, 0, 2, 50, 13, alpha=0.16)
 
-    ARMS = {"out":  [(0, 0), (24, -6), (42, -12)],
-            "hip":  [(0, 0), (20, -16), (11, -30)],
-            "up":   [(0, 0), (17, 15), (26, 34)],
-            "down": [(0, 0), (11, -19), (14, -35)]}
-    al, ar = ARMS.get(arm_l, arm_l), ARMS.get(arm_r, arm_r)
+    ARMS = {"out":  ([(0, 0), (25, -7), (45, -14)], 10),
+            "hip":  ([(0, 0), (22, -17), (12, -33)], 44),
+            "up":   ([(0, 0), (18, 16), (28, 37)], 18),
+            "down": ([(0, 0), (12, -20), (16, -38)], -6)}
+    al, al_ang = ARMS.get(arm_l, (arm_l, 0))
+    ar, ar_ang = ARMS.get(arm_r, (arm_r, 0))
 
     for sx in (-1, 1):
         taper(c, [(sx * 13, 32), (sx * 17, 17), (sx * 18, 6)], 11, 9.5,
@@ -743,8 +826,8 @@ def draw_ogre(c, x, y, s=1.0, flip=False, expr="grin", arm_l="out",
                 (sx * 18 + 12, 6)], "#4C3A2E", tension=0.4)
 
     pts = [(-px - 28, py + 70) for px, py in al]
-    taper(c, pts, 10, 7.5, fill="ogre_dk", stroke=LINE, lw=LW)
-    circle(c, pts[-1][0], pts[-1][1], 8.5, fill="ogre_dk", stroke=LINE, lw=1.3)
+    taper(c, pts, 9.0, 6.8, fill="ogre_dk", stroke=LINE, lw=LW)
+    _paw(c, pts[-1][0], pts[-1][1], 9.0, -al_ang, fill="ogre_dk")
 
     _ol(c, [(0, 86), (34, 72), (42, 42), (34, 22), (0, 16), (-34, 22),
             (-42, 42), (-34, 72)], "ogre_cloth")
@@ -752,10 +835,11 @@ def draw_ogre(c, x, y, s=1.0, flip=False, expr="grin", arm_l="out",
          fill="#4E3459", tension=0.6)
 
     pts = [(px + 28, py + 70) for px, py in ar]
-    taper(c, pts, 10.5, 8, fill="ogre_skin", stroke=LINE, lw=LW)
-    circle(c, pts[-1][0], pts[-1][1], 9, fill="ogre_skin", stroke=LINE, lw=1.3)
+    taper(c, pts, 9.5, 7.2, fill="ogre_skin", stroke=LINE, lw=LW)
+    _paw(c, pts[-1][0], pts[-1][1], 9.5, ar_ang, fill="ogre_skin")
 
-    circle(c, 0, 106, 27, fill="ogre_skin", stroke=LINE, lw=LW)
+    _ol(c, [(0, 138), (22, 133), (31, 114), (28, 92), (0, 80), (-28, 92),
+            (-31, 114), (-22, 133)], "ogre_skin", tension=0.95)
     for sx in (-1, 1):
         _ol(c, [(sx * 26, 112), (sx * 34, 106), (sx * 26, 98), (sx * 22, 105)],
             "ogre_skin", tension=0.6)
@@ -770,11 +854,12 @@ def draw_ogre(c, x, y, s=1.0, flip=False, expr="grin", arm_l="out",
         else:
             ellipse(c, sx * 10, 107, 5.4, 5.0, fill="#FFFFFF", stroke=LINE, lw=1.2)
             circle(c, sx * 10, 106.6, 2.6, fill="ink")
-    ellipse(c, 0, 99, 6.5, 5, fill="ogre_dk")
+    _ol(c, [(0, 105), (7, 101), (6, 95), (0, 92), (-6, 95), (-7, 101)],
+        "ogre_dk", tension=0.95)
     if expr == "grin":
-        _ol(c, [(-14, 93), (0, 83), (14, 93), (0, 90)], "#5E2B2B", tension=0.7)
+        _ol(c, [(-15, 92), (0, 81), (15, 92), (0, 89)], "#5E2B2B", tension=0.75)
         for dx in (-8, 8):
-            poly(c, [(dx - 3.2, 92), (dx + 3.2, 92), (dx, 83)], fill="#FFFFFF",
+            poly(c, [(dx - 3.2, 91), (dx + 3.2, 91), (dx, 82)], fill="#FFFFFF",
                  stroke=LINE, lw=1.0)
     elif expr == "surprised":
         ellipse(c, 0, 90, 6.5, 7.5, fill="#5E2B2B", stroke=LINE, lw=1.2)

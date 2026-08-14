@@ -43,6 +43,13 @@ Chinese. Both are already present on most Linux boxes.
   `stroke_path`), scenery (`meadow`, `castle`, `coach`, `horse`) and the
   characters. `draw_puss` is parameterised by pose, expression, tail and
   costume so the same cat appears on every page.
+
+  The characters are built the way a cel-animation cat is built: a round
+  cranium with a muzzle that genuinely projects in front of it, big adjacent
+  eyes over a brow ridge, and long tapering limbs ending in mitten paws
+  (`_paw`). Everything is drawn with round joins and caps, and the silhouettes
+  are Catmull-Rom curves rather than straight-edged polygons, so the linework
+  stays smooth at any print size.
 - `book.py` — page layout, the text panel, and one function per scene.
 - `story.py` / `story_zh.py` — the text, one entry per spread. Edit these to
   change the wording; the scenes are keyed to them by position.
