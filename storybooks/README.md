@@ -55,6 +55,12 @@ The shapes are unchanged from v1; what changed is how they are painted:
 - **Deeper contact shadows.** Three stacked ellipses instead of one flat disc.
 - **Ground and hills** are graded and lightly dappled rather than flat slabs.
 - **Edge vignette** on every page so the eye lands in the middle.
+- **Soft coloured linework.** Outlines are no longer one uniform dark brown:
+  each shape is outlined in a darkened version of its own fill, which is what
+  shifts the look from "colouring book" toward "airbrushed". Facial features
+  and whiskers keep true ink so faces stay crisp.
+- **Three-stop gradients** (shadow, local colour, light) instead of two, and
+  clouds built from top-lit lobes over a shaded base.
 - **An alpha bug fixed.** `paint()` never reset transparency, so any shape
   drawn after a translucent one inherited its alpha and rendered washed out.
   Colours across all six books are noticeably richer as a result.

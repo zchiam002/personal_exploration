@@ -108,6 +108,18 @@ def col(name_or_hex, alpha=None):
     return c
 
 
+def shade(hex_or_name, k=0.82):
+    """Darken (k<1) or lighten (k>1) a palette colour."""
+    h = P.get(hex_or_name, hex_or_name)
+    r, g, b = int(h[1:3], 16), int(h[3:5], 16), int(h[5:7], 16)
+    f = lambda v: max(0, min(255, int(v * k if k < 1 else v + (255 - v) * (k - 1))))
+    return "#%02X%02X%02X" % (f(r), f(g), f(b))
+
+
+RICH = True          # set False for the flat v1 look
+SOFT_LINE = 0.52     # outline = fill darkened this much (v2 soft look)
+
+
 def paint(c, fill=None, stroke=None, lw=1.6, alpha=None):
     """
     Set fill/stroke state; returns (do_fill, do_stroke) for path drawing.
@@ -121,6 +133,10 @@ def paint(c, fill=None, stroke=None, lw=1.6, alpha=None):
         c.setFillColor(col(fill, alpha))
         c.setFillAlpha(a)
     if stroke is not None:
+        if RICH and stroke == "ink_line" and fill is not None:
+            # soft look: outline in a darkened version of the fill colour
+            # rather than one uniform dark brown
+            stroke = shade(fill, SOFT_LINE)
         c.setStrokeColor(col(stroke))
         c.setStrokeAlpha(a)
         c.setLineWidth(lw)
@@ -197,7 +213,6 @@ def blob(c, pts, fill=None, stroke=None, lw=1.6, alpha=None,
 # gentle top-to-bottom gradient, a rim light and a contact shadow read as
 # painted. Everything below is additive -- no shape changes, only rendering.
 
-RICH = True          # set False for the flat v1 look
 MIN_GRAD = 9.0       # shapes shorter than this stay flat (keeps the PDF small)
 
 
@@ -224,8 +239,8 @@ def grad_fill(c, pts, fill, closed=True, tension=1.0, lift=1.18, drop=0.84,
     c.setStrokeAlpha(1.0)
     c.clipPath(_mkpath(c, pts, closed, tension), stroke=0, fill=0)
     c.linearGradient(0, y0, 0, y1,
-                     [col(shade(fill, drop)), col(shade(fill, lift))],
-                     extend=True)
+                     [col(shade(fill, drop)), col(fill),
+                      col(shade(fill, lift))], extend=True)
     c.restoreState()
 
 
@@ -242,8 +257,8 @@ def grad_disc(c, cx, cy, rx, ry, fill, lift=1.22, drop=0.82, hx=-0.35,
     p.ellipse(cx - rx, cy - ry, rx * 2, ry * 2)
     c.clipPath(p, stroke=0, fill=0)
     c.radialGradient(cx + hx * rx, cy + hy * ry, max(rx, ry) * 1.45,
-                     [col(shade(fill, lift)), col(shade(fill, drop))],
-                     extend=True)
+                     [col(shade(fill, lift)), col(fill),
+                      col(shade(fill, drop))], extend=True)
     c.restoreState()
 
 
@@ -407,14 +422,24 @@ def sun(c, cx, cy, r=34, color="#FFF0B8", glow="#FFE79A"):
 
 
 def cloud(c, cx, cy, s=1.0, fill="cloud", alpha=0.95):
-    for dx, dy, rr in ((-26, -2, 17), (-6, 6, 23), (18, 0, 18), (34, -6, 13)):
-        ellipse(c, cx + dx * s, cy + dy * s, rr * s, rr * s * 0.82,
-                fill=fill, alpha=alpha)
-    rect(c, cx - 40 * s, cy - 12 * s, 82 * s, 13 * s, fill=fill, alpha=alpha)
-    if RICH:
-        for dx, dy, rr in ((-24, -6, 13), (-4, -3, 17), (18, -6, 13)):
-            ellipse(c, cx + dx * s, cy + dy * s, rr * s, rr * s * 0.5,
-                    fill=shade(fill, 0.93), alpha=alpha * 0.55)
+    lobes = ((-26, -2, 17), (-6, 6, 23), (18, 0, 18), (34, -6, 13))
+    if RICH and alpha >= 0.9:
+        # rounded, top-lit lobes over a soft shaded base
+        for dx, dy, rr in lobes:
+            ellipse(c, cx + dx * s, cy + dy * s - rr * s * 0.2, rr * s,
+                    rr * s * 0.6, fill=shade(fill, 0.90))
+        for dx, dy, rr in lobes:
+            grad_disc(c, cx + dx * s, cy + dy * s, rr * s, rr * s * 0.82,
+                      fill, lift=1.04, drop=0.90, hx=-0.25, hy=0.5)
+        rect(c, cx - 40 * s, cy - 12 * s, 82 * s, 12 * s, fill=fill)
+        ellipse(c, cx - 2 * s, cy - 11 * s, 39 * s, 5 * s,
+                fill=shade(fill, 0.90), alpha=0.6)
+    else:
+        for dx, dy, rr in lobes:
+            ellipse(c, cx + dx * s, cy + dy * s, rr * s, rr * s * 0.82,
+                    fill=fill, alpha=alpha)
+        rect(c, cx - 40 * s, cy - 12 * s, 82 * s, 13 * s, fill=fill,
+             alpha=alpha)
 
 
 def hills(c, x, y, w, base_h, color="grass_dk", bumps=3, seedoff=0.0, alpha=None):
@@ -509,12 +534,6 @@ LINE = "ink_line"
 LW = 1.7
 
 
-def shade(hex_or_name, k=0.82):
-    """Darken (k<1) or lighten (k>1) a palette colour."""
-    h = P.get(hex_or_name, hex_or_name)
-    r, g, b = int(h[1:3], 16), int(h[3:5], 16), int(h[5:7], 16)
-    f = lambda v: max(0, min(255, int(v * k if k < 1 else v + (255 - v) * (k - 1))))
-    return "#%02X%02X%02X" % (f(r), f(g), f(b))
 
 
 def _ol(c, pts, fill, lw=LW, tension=1.0, shine=True):
@@ -522,7 +541,8 @@ def _ol(c, pts, fill, lw=LW, tension=1.0, shine=True):
     grad_fill(c, pts, fill, tension=tension)
     if shine:
         rim(c, pts, alpha=0.21, lw=lw * 1.6, tension=tension)
-    blob(c, pts, fill=None, stroke=LINE, lw=lw, tension=tension)
+    ln = shade(fill, SOFT_LINE) if RICH else LINE
+    blob(c, pts, fill=None, stroke=ln, lw=lw, tension=tension)
 
 
 def _cat_hat(c):
@@ -645,7 +665,8 @@ def _boot(c, x, y, rot=0.0):
         "boot", tension=0.5)
     _ol(c, [(-11, 17), (-12.5, 30), (11, 31), (10, 16)], "boot_dk", tension=0.5)
     rect(c, -10, 3.5, 18, 4.2, fill="gold_dk", r=1.8, stroke=LINE, lw=1.1)
-    blob(c, [(-5, 9), (-1, 18), (3, 9)], fill="#FFFFFF", alpha=0.16, tension=0.7)
+    blob(c, [(-5, 9), (-1, 18), (3, 9)], fill="#FFFFFF", alpha=0.22, tension=0.7)
+    circle(c, 9, 3.5, 1.6, fill="#FFFFFF", alpha=0.38)
     c.restoreState()
 
 
