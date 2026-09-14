@@ -1,0 +1,864 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bridge Vibration Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* ---------- tokens: light (bare :root), dark under OS preference and under the explicit toggle ---------- */
+:root {
+  color-scheme: light;
+  --page: #f1f3f2;
+  --surface: #fcfcfb;
+  --surface-2: #f3f4f1;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
+  --shadow: rgba(11, 11, 11, 0.14);
+  --accent: #245a7c;
+  --accent-ink: #ffffff;
+  --accent-wash: rgba(36, 90, 124, 0.09);
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --s3: #1baf7a;
+  --good: #0ca30c;
+  --good-text: #006300;
+  --warn: #fab219;
+  --serious: #ec835a;
+  --crit: #d03b3b;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-2: #232322;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --shadow: rgba(0, 0, 0, 0.5);
+    --accent: #7fb3d5;
+    --accent-ink: #0b0b0b;
+    --accent-wash: rgba(127, 179, 213, 0.14);
+    --s1: #3987e5;
+    --s2: #d95926;
+    --s3: #199e70;
+    --good-text: #0ca30c;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --surface-2: #232322;
+  --ink: #ffffff;
+  --ink-2: #c3c2b7;
+  --muted: #898781;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255, 255, 255, 0.10);
+  --shadow: rgba(0, 0, 0, 0.5);
+  --accent: #7fb3d5;
+  --accent-ink: #0b0b0b;
+  --accent-wash: rgba(127, 179, 213, 0.14);
+  --s1: #3987e5;
+  --s2: #d95926;
+  --s3: #199e70;
+  --good-text: #0ca30c;
+}
+
+/* ---------- base ---------- */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.45;
+  padding-inline: 20px;
+  padding-block: 0 28px;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1360px; margin: 0 auto; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button { font: inherit; }
+h1, h2, h3, p { margin: 0; }
+.mono { font-family: var(--mono); font-size: 12px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- top bar ---------- */
+.topbar {
+  display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+  gap: 12px 28px; padding-block: 18px 14px; border-bottom: 1px solid var(--border);
+}
+.brand { font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); font-weight: 500; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.brand .tag { letter-spacing: 0; text-transform: none; font-weight: 500; font-size: 11px; padding: 1px 7px; border-radius: 4px; background: var(--accent-wash); color: var(--accent); }
+h1 { font-size: 24px; font-weight: 600; line-height: 1.2; margin-top: 3px; text-wrap: balance; }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.pill { display: inline-flex; align-items: center; gap: 7px; padding: 3px 10px 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; background: var(--surface); border: 1px solid var(--border); color: var(--ink); white-space: nowrap; }
+.pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+.pill.good::before { background: var(--good); }
+.pill.warn::before { background: var(--warn); }
+.pill.info::before { background: var(--accent); }
+.topbar .right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.meta { font-size: 12px; color: var(--ink-2); text-align: right; line-height: 1.5; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.btn { font-size: 13px; font-weight: 500; padding: 7px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.btn:hover { border-color: var(--axis); }
+.btn.primary:hover { filter: brightness(1.08); }
+
+/* ---------- filter row ---------- */
+.filters { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; padding-block: 14px 12px; }
+.filters .lbl { font-size: 12px; color: var(--ink-2); margin-right: 8px; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--surface); }
+.seg button { font-size: 13px; padding: 6px 11px; border: 0; background: transparent; color: var(--ink-2); cursor: pointer; border-right: 1px solid var(--border); line-height: 1.25; text-align: left; }
+.seg button:last-child { border-right: 0; }
+.seg button:hover { background: var(--surface-2); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.seg button .sub { display: block; font-size: 11px; opacity: .85; font-variant-numeric: tabular-nums; }
+
+/* ---------- KPI tiles ---------- */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px 10px; display: flex; flex-direction: column; gap: 4px; min-height: 118px; min-width: 0; }
+.tile .label { font-size: 12px; color: var(--ink-2); }
+.tile .value { font-size: 27px; font-weight: 600; line-height: 1.15; }
+.tile .value small { font-size: 13px; font-weight: 500; color: var(--ink-2); margin-left: 4px; }
+.tile .foot { font-size: 12px; color: var(--muted); margin-top: auto; display: flex; justify-content: space-between; gap: 10px; align-items: flex-end; }
+.tile .foot .st { color: var(--ink-2); font-weight: 500; }
+.spark { display: block; width: 92px; height: 26px; flex: none; }
+.chips { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
+.chip { font-size: 11px; padding: 1px 7px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--border); color: var(--ink-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.chip.ok { color: var(--good-text); border-color: transparent; background: var(--accent-wash); }
+
+/* ---------- card grid ---------- */
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px 12px; min-width: 0; }
+.span2 { grid-column: span 2; }
+.card-head { display: flex; justify-content: space-between; gap: 10px 16px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 10px; }
+.card h2 { font-size: 14px; font-weight: 600; }
+.card .sub { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--ink-2); align-items: center; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { display: inline-block; width: 14px; height: 0; border-top: 2px solid; border-radius: 1px; }
+.legend i.dot { width: 8px; height: 8px; border: 0; border-radius: 50%; background: currentColor; }
+.legend i.rule { border-top-style: dashed; }
+
+/* ---------- charts ---------- */
+.chart { position: relative; width: 100%; }
+.chart-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.hit { position: absolute; cursor: crosshair; border-radius: 2px; }
+.tip { position: absolute; z-index: 3; pointer-events: none; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 4px 14px var(--shadow); border-radius: 6px; padding: 8px 10px; font-size: 12px; min-width: 160px; }
+.tip .th { font-family: var(--mono); color: var(--ink-2); margin-bottom: 4px; font-size: 11px; white-space: nowrap; }
+.tip .row { display: flex; align-items: center; gap: 8px; line-height: 1.7; white-space: nowrap; }
+.tip .row i { width: 12px; border-top: 2px solid; flex: none; }
+.tip .row i.dot { width: 8px; height: 8px; border: 0; border-radius: 50%; }
+.tip strong { font-variant-numeric: tabular-nums; }
+.tip .row .lbl { color: var(--ink-2); }
+svg .grid { stroke: var(--grid); stroke-width: 1; }
+svg .axis { stroke: var(--axis); stroke-width: 1; }
+svg .tick { fill: var(--muted); font-size: 11px; font-family: var(--sans); font-variant-numeric: tabular-nums; }
+svg .unit { fill: var(--muted); font-size: 11px; font-family: var(--sans); }
+svg .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+svg .area { stroke: none; opacity: .12; }
+svg .ring { fill: var(--surface); }
+svg .endlabel { fill: var(--ink); font-size: 11px; font-weight: 500; font-family: var(--sans); font-variant-numeric: tabular-nums; }
+svg .vline { stroke: var(--ink-2); stroke-width: 1; }
+svg .rule { stroke: var(--muted); stroke-width: 1; }
+svg .rule.dashed { stroke-dasharray: 4 3; }
+svg .rulelabel { fill: var(--muted); font-size: 10.5px; font-family: var(--sans); }
+svg .event { stroke: var(--accent); stroke-width: 1; opacity: .6; }
+svg .eventlabel { fill: var(--accent); font-size: 10.5px; font-family: var(--sans); }
+svg .barlabel { fill: var(--ink); font-size: 12px; font-family: var(--sans); font-variant-numeric: tabular-nums; }
+svg .cat { fill: var(--ink); font-size: 12.5px; font-family: var(--sans); }
+svg .catsub { fill: var(--ink-2); font-size: 11px; font-family: var(--sans); }
+svg .deck { stroke: var(--ink-2); stroke-width: 2.5; }
+svg .support { fill: var(--surface-2); stroke: var(--axis); stroke-width: 1; }
+svg .sensor { fill: var(--surface); stroke: var(--ink-2); stroke-width: 1.2; }
+svg .sensorlabel { fill: var(--muted); font-size: 9.5px; font-family: var(--mono); }
+svg .shape { fill: none; stroke: var(--s1); stroke-width: 2; stroke-linecap: round; }
+svg .shape.faint { opacity: .5; }
+svg .ident { fill: var(--s2); }
+.strips { display: grid; gap: 2px; margin-top: 4px; }
+.strip-title { font-size: 11px; color: var(--ink-2); margin: 4px 0 0 60px; }
+
+/* ---------- tables ---------- */
+.tscroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-2); font-weight: 500; text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 7px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.sel td { background: var(--accent-wash); }
+tr.clickable { cursor: pointer; }
+tr.clickable:hover td { background: var(--surface-2); }
+tr.sel.clickable:hover td { background: var(--accent-wash); }
+td .name { display: block; font-size: 11.5px; color: var(--ink-2); }
+#mode-table { font-size: 12px; }
+#mode-table th { padding: 5px 6px; text-transform: none; letter-spacing: 0; font-size: 11.5px; }
+#mode-table td { padding: 6px 6px; }
+#mode-table td .mode { white-space: nowrap; font-weight: 500; }
+#mode-table td .name { font-size: 11px; }
+details.tv { margin-top: 8px; font-size: 12px; }
+details.tv summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+details.tv table { margin-top: 6px; font-size: 12px; }
+details.tv td, details.tv th { padding: 4px 8px; }
+.status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+.status.ok::before { background: var(--good); }
+.status.warn::before { background: var(--warn); }
+.status.crit::before { background: var(--crit); }
+.status.info::before { background: var(--accent); }
+
+/* ---------- lists ---------- */
+.dl { display: grid; grid-template-columns: auto 1fr; gap: 7px 16px; font-size: 13px; margin: 0; }
+.dl dt { color: var(--ink-2); }
+.dl dd { margin: 0; font-variant-numeric: tabular-nums; min-width: 0; }
+.log { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+.log li { display: grid; grid-template-columns: 82px auto 1fr; gap: 6px 12px; align-items: baseline; font-size: 13px; }
+.log time { font-family: var(--mono); font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+.log .chip { justify-self: start; }
+.log p { min-width: 0; }
+.notice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border); font-size: 12.5px; color: var(--ink-2); margin-top: 10px; line-height: 1.5; }
+.notice b { color: var(--ink); font-weight: 600; }
+.hero { font-size: 40px; font-weight: 600; line-height: 1; margin: 6px 0 2px; }
+.hero small { font-size: 13px; font-weight: 500; color: var(--ink-2); margin-left: 6px; }
+
+footer { font-size: 12px; color: var(--muted); padding-block: 18px 0; display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: space-between; }
+
+@media (max-width: 1080px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .grid { grid-template-columns: 1fr; }
+  .span2 { grid-column: auto; }
+  .topbar .right { align-items: flex-start; }
+  .meta { text-align: left; }
+  .actions { justify-content: flex-start; }
+  .log li { grid-template-columns: 82px 1fr; }
+  .log li p { grid-column: 1 / -1; }
+  h1 { font-size: 21px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .btn, .seg button, tr.clickable td { transition: background-color .12s, border-color .12s; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="topbar">
+  <div>
+    <div class="brand">Bridge Vibration Monitor <span class="tag">Mock-up · synthetic data</span></div>
+    <h1>[bridge name] — modal health</h1>
+    <div class="pills">
+      <span class="pill info" id="pill-baseline">Baseline period · day 42 of 90</span>
+      <span class="pill" id="pill-alerting">Alerting off until baseline sign-off</span>
+      <span class="pill good" id="pill-pipeline">Pipeline healthy</span>
+    </div>
+  </div>
+  <div class="right">
+    <div class="meta">
+      Last window <span class="mono" id="meta-window">—</span><br>
+      Result ready <span class="mono" id="meta-ready">—</span> · <span id="meta-ttr">—</span> after file arrival
+    </div>
+    <div class="actions">
+      <button class="btn" id="btn-export-csv" type="button">Export CSV</button>
+      <button class="btn primary" id="btn-export-pdf" type="button">Monthly report (PDF)</button>
+    </div>
+  </div>
+</header>
+
+<div class="filters" role="group" aria-label="Filters">
+  <div><span class="lbl">Range</span>
+    <div class="seg" id="range-seg">
+      <button type="button" id="range-7d" data-range="7d" aria-pressed="false">7 days</button>
+      <button type="button" id="range-14d" data-range="14d" aria-pressed="false">14 days</button>
+      <button type="button" id="range-30d" data-range="30d" aria-pressed="true">30 days</button>
+      <button type="button" id="range-all" data-range="all" aria-pressed="false">Baseline to date</button>
+    </div>
+  </div>
+  <div><span class="lbl">Mode</span>
+    <div class="seg" id="mode-seg"></div>
+  </div>
+</div>
+
+<section class="kpis" aria-label="Summary">
+  <div class="tile">
+    <div class="label">Reference modes identified, last window</div>
+    <div class="value" id="kpi-idlast">—</div>
+    <div class="chips" id="kpi-idlast-chips"></div>
+    <div class="foot"><span>Reference set: provisional</span></div>
+  </div>
+  <div class="tile">
+    <div class="label">Windows with all 5 modes, <span class="rangeword">last 30 days</span></div>
+    <div class="value" id="kpi-idrate">—</div>
+    <div class="foot"><span>Phase 1 target ≥ 90%</span><svg class="spark" id="spark-idrate" aria-hidden="true"></svg></div>
+  </div>
+  <div class="tile">
+    <div class="label">Frequency scatter after normalisation, <span class="modeword">Mode 1</span></div>
+    <div class="value" id="kpi-cov">—</div>
+    <div class="foot"><span>CoV · target &lt; 1%</span><svg class="spark" id="spark-cov" aria-hidden="true"></svg></div>
+  </div>
+  <div class="tile">
+    <div class="label">Files passing validation, <span class="rangeword">last 30 days</span></div>
+    <div class="value" id="kpi-files">—</div>
+    <div class="foot"><span class="st" id="kpi-files-q">—</span><svg class="spark" id="spark-q" aria-hidden="true"></svg></div>
+  </div>
+  <div class="tile">
+    <div class="label">Time to result, median, <span class="rangeword">last 30 days</span></div>
+    <div class="value" id="kpi-ttr">—</div>
+    <div class="foot"><span id="kpi-ttr-share">—</span><svg class="spark" id="spark-ttr" aria-hidden="true"></svg></div>
+  </div>
+</section>
+
+<main class="grid">
+
+  <article class="card span2">
+    <div class="card-head">
+      <div><h2 id="freq-title">Mode 1 · V1 — frequency</h2><div class="sub">Hourly windows. Normalised = raw with the temperature and traffic regression removed, referenced to 28 °C and traffic index 40; the line is its 24 h running mean.</div></div>
+      <div class="legend"><span><i class="dot" style="color:var(--muted)"></i>Identified per window (raw)</span><span><i style="border-color:var(--s1)"></i>Normalised, 24 h mean</span><span><i style="border-color:var(--accent);opacity:.7"></i>Logged event</span></div>
+    </div>
+    <div id="chart-freq"></div>
+    <div class="strips">
+      <p class="strip-title">Deck temperature, °C</p>
+      <div id="chart-temp"></div>
+      <p class="strip-title">Traffic index (0–100)</p>
+      <div id="chart-traffic"></div>
+    </div>
+    <details class="tv"><summary>Table view (daily)</summary><div class="tscroll" id="table-freq"></div></details>
+  </article>
+
+  <aside class="card">
+    <div class="card-head"><div><h2>Reference mode set</h2><div class="sub">Provisional, from baseline to date. Sign-off pending.</div></div></div>
+    <div class="tscroll"><table id="mode-table"><thead><tr><th>Mode</th><th class="num">Ref Hz</th><th class="num">Last Hz</th><th class="num">ζ %</th><th class="num">MAC</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+    <div id="shape" style="margin-top:12px"></div>
+  </aside>
+
+  <article class="card">
+    <div class="card-head">
+      <div><h2 id="damp-title">Mode 1 · V1 — damping ratio</h2><div class="sub">Per window, with a 24 h rolling median.</div></div>
+      <div class="legend"><span><i class="dot" style="color:var(--muted)"></i>Per window</span><span><i style="border-color:var(--s1)"></i>24 h median</span></div>
+    </div>
+    <div id="chart-damp"></div>
+    <details class="tv"><summary>Table view (daily)</summary><div class="tscroll" id="table-damp"></div></details>
+  </article>
+
+  <article class="card">
+    <div class="card-head">
+      <div><h2>MAC against reference, last window</h2><div class="sub">Modal assurance criterion of the identified shape vs the provisional reference shape.</div></div>
+    </div>
+    <div id="chart-mac"></div>
+  </article>
+
+  <article class="card">
+    <div class="card-head">
+      <div><h2 id="resid-title">Mode 1 · V1 — normalised residual</h2><div class="sub">Control chart on the normalised frequency, % of reference.</div></div>
+      <div class="legend"><span><i style="border-color:var(--s1)"></i>Residual</span><span><i class="rule" style="border-color:var(--muted)"></i>Provisional ±3σ</span></div>
+    </div>
+    <div id="chart-resid"></div>
+    <div class="notice"><span aria-hidden="true">ⓘ</span><span><b>0 open alerts.</b> Limits are provisional (baseline so far). Alerting switches on at baseline sign-off, planned for <span id="signoff-date">—</span>, after the reference set is agreed with the owner.</span></div>
+    <details class="tv"><summary>Table view (daily)</summary><div class="tscroll" id="table-resid"></div></details>
+  </article>
+
+  <article class="card span2">
+    <div class="card-head">
+      <div><h2>Data quality</h2><div class="sub" id="dq-sub">—</div></div>
+      <div class="legend" id="dq-reasons"></div>
+    </div>
+    <div class="tscroll"><table id="dq-table"><thead><tr><th>File</th><th>Window (UTC)</th><th>Check failed</th><th>Detail</th><th>Channel</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+  </article>
+
+  <article class="card">
+    <div class="card-head"><div><h2>Pipeline health</h2><div class="sub">Operator view. Missing-file alert after 2 h.</div></div><span class="status ok">Healthy</span></div>
+    <dl class="dl">
+      <dt>Last file arrived</dt><dd class="mono" id="ph-arrived">—</dd>
+      <dt>Last result</dt><dd class="mono" id="ph-result">—</dd>
+      <dt>Files queued</dt><dd>0</dd>
+      <dt>Files, last 24 h</dt><dd id="ph-24h">—</dd>
+      <dt>Identification</dt><dd>SSI-cov (primary) · FDD (cross-check) · pyOMA2</dd>
+      <dt>Algorithm build</dt><dd class="mono">oma-pipeline 0.3.1 · pyoma2 [version]</dd>
+      <dt>Active config</dt><dd class="mono">cfg-2026-08-04-a41f9c</dd>
+      <dt>Raw archive</dt><dd>1.9 TB of 24 TB · retention ≥ [5] years</dd>
+      <dt>Last operator alert</dt><dd>None in range</dd>
+    </dl>
+  </article>
+
+  <article class="card span2">
+    <div class="card-head"><div><h2>Maintenance &amp; event log</h2><div class="sub">Linked to the timeline above. Entries with a marker are shown on the frequency chart.</div></div><button class="btn" id="btn-log-event" type="button">Log an event</button></div>
+    <ul class="log" id="event-log"></ul>
+  </article>
+
+</main>
+
+<footer>
+  <span>Bridge Vibration Monitoring Platform · dashboard mock-up v0.1 · covers PRD v0.1 FR9–FR12</span>
+  <span>All figures are synthetic. Buttons are inert in this mock-up.</span>
+</footer>
+
+</div>
+
+<script>
+(function () {
+'use strict';
+const SVG = 'http://www.w3.org/2000/svg';
+const sv = (tag, attrs, parent) => { const e = document.createElementNS(SVG, tag); if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const h = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const $ = s => document.querySelector(s);
+const H = 3600e3, D = 24 * H;
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const pad = n => String(n).padStart(2, '0');
+const fmtDay = t => { const d = new Date(t); return d.getUTCDate() + ' ' + MON[d.getUTCMonth()]; };
+const fmtDate = t => fmtDay(t) + ' ' + new Date(t).getUTCFullYear();
+const fmtHM = t => { const d = new Date(t); return pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()); };
+const fmtWin = t => fmtDay(t) + ' ' + fmtHM(t - H) + '–' + fmtHM(t) + ' UTC';
+const fileId = t => { const d = new Date(t - H); return 'acc_' + d.getUTCFullYear() + pad(d.getUTCMonth() + 1) + pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + '00Z'; };
+const mean = a => a.reduce((s, v) => s + v, 0) / a.length;
+const std = a => { const m = mean(a); return Math.sqrt(a.reduce((s, v) => s + (v - m) * (v - m), 0) / (a.length - 1)); };
+const median = a => { const b = [...a].sort((p, q) => p - q); const n = b.length; return n ? (n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2) : NaN; };
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+/* ================= synthetic data (seeded, deterministic) ================= */
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const rnd = mulberry32(20260914);
+const gauss = () => { let u = 0, v = 0; while (u === 0) u = rnd(); while (v === 0) v = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+
+const BASELINE_START = Date.UTC(2026, 7, 4);        // 4 Aug 2026 00:00 UTC
+const END = Date.UTC(2026, 8, 14, 8);               // last window ends 14 Sep 2026 08:00 UTC
+const N = Math.round((END - BASELINE_START) / H);   // hourly windows so far
+const times = Array.from({ length: N }, (_, i) => BASELINE_START + (i + 1) * H); // window end times
+const LAST = N - 1;
+const BASELINE_DAYS = 90;
+const baselineDay = Math.floor((END - BASELINE_START) / D) + 1;
+const SIGNOFF = BASELINE_START + BASELINE_DAYS * D;
+
+const MODES = [
+  { id: 1, label: 'V1', name: '1st vertical bending', f0: 1.842, z0: 0.9, n: 1, kind: 'v', pfail: 0.008, mac: 0.98 },
+  { id: 2, label: 'T1', name: '1st torsion',          f0: 2.613, z0: 1.2, n: 1, kind: 't', pfail: 0.008, mac: 0.97 },
+  { id: 3, label: 'V2', name: '2nd vertical bending', f0: 3.357, z0: 0.8, n: 2, kind: 'v', pfail: 0.010, mac: 0.95 },
+  { id: 4, label: 'L1', name: '1st lateral bending',  f0: 4.905, z0: 1.6, n: 1, kind: 'l', pfail: 0.025, mac: 0.91 },
+  { id: 5, label: 'V3', name: '3rd vertical bending', f0: 6.128, z0: 0.7, n: 3, kind: 'v', pfail: 0.035, mac: 0.88 },
+];
+
+// environment: tropical diurnal temperature, weekday traffic peaks (local time = UTC+8)
+const dayOff = []; { let d = 0; for (let k = 0; k < 60; k++) { d = 0.7 * d + gauss() * 0.9; dayOff.push(d); } }
+const rainDays = new Set([3, 9, 16, 22, 27, 36]);
+const env = times.map(t => {
+  const loc = new Date(t + 8 * H), hl = loc.getUTCHours() + loc.getUTCMinutes() / 60, dow = loc.getUTCDay();
+  const day = Math.floor((t - BASELINE_START) / D);
+  let T = 28.4 + 3.1 * Math.sin(2 * Math.PI * (hl - 9) / 24) + dayOff[day] + gauss() * 0.25;
+  if (rainDays.has(day) && hl >= 14 && hl <= 19) T -= 2.8;
+  const wk = (dow === 0 || dow === 6);
+  let tr = 10 + (wk ? 55 : 88) * (Math.exp(-Math.pow(hl - 8.3, 2) / 3.2) + 0.9 * Math.exp(-Math.pow(hl - 18.2, 2) / 4.5)) + gauss() * 4;
+  return { T, tr: clamp(tr, 3, 100) };
+});
+
+// files quarantined by the arrival validator (FR2)
+const Q = new Map();
+const qi = (mo, d, hh) => Math.round((Date.UTC(2026, mo, d, hh) - BASELINE_START) / H); // index of the window starting at that hour
+[
+  [qi(7, 17, 22), 'Gaps',         '3 gaps, 1.4 s total',                'all'],
+  [qi(7, 26, 5),  'Clipping',     'A3 at full scale for 0.6 s',         'A3'],
+  [qi(8, 8, 14),  'Gaps',         '2 gaps, 2.1 s total',                'all'],
+  [qi(8, 9, 7),   'Clipping',     'A3 saturated for 1.9 s',             'A3'],
+  [qi(8, 9, 8),   'Clipping',     'A3 saturated for 0.4 s',             'A3'],
+  [qi(8, 11, 2),  'Dead channel', 'A6 flat, σ below 1e-5 m/s²',        'A6'],
+  [qi(8, 11, 3),  'Dead channel', 'A6 flat, σ below 1e-5 m/s²',        'A6'],
+].forEach(([i, reason, detail, ch]) => Q.set(i, { reason, detail, ch }));
+
+// identified frequencies and damping per mode and window (null = not identified / file quarantined)
+const raw = MODES.map(m => times.map((t, i) => {
+  if (Q.has(i)) return null;
+  if (i !== LAST && rnd() < m.pfail) return null;
+  const e = env[i];
+  return m.f0 * (1 - 0.00085 * (e.T - 28)) * (1 - 0.0007 * e.tr / 100) * (1 + gauss() * 0.0022);
+}));
+const damp = MODES.map((m, k) => times.map((t, i) => raw[k][i] == null ? null : Math.max(0.2, m.z0 * (1 + 0.3 * env[i].tr / 100) * Math.exp(gauss() * 0.28))));
+
+// normalisation model (FR8): f = a + b·T + c·traffic, least squares on the baseline so far
+function solve3(A, b) {
+  const M = A.map((r, i) => [...r, b[i]]);
+  for (let c = 0; c < 3; c++) {
+    let p = c; for (let r = c + 1; r < 3; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    [M[c], M[p]] = [M[p], M[c]];
+    for (let r = c + 1; r < 3; r++) { const f = M[r][c] / M[c][c]; for (let j = c; j < 4; j++) M[r][j] -= f * M[c][j]; }
+  }
+  const x = [0, 0, 0];
+  for (let r = 2; r >= 0; r--) { let s = M[r][3]; for (let j = r + 1; j < 3; j++) s -= M[r][j] * x[j]; x[r] = s / M[r][r]; }
+  return x;
+}
+const model = MODES.map((m, k) => {
+  let n = 0, sT = 0, sR = 0, sTT = 0, sRR = 0, sTR = 0, sf = 0, sfT = 0, sfR = 0;
+  for (let i = 0; i < N; i++) { const f = raw[k][i]; if (f == null) continue; const { T, tr } = env[i]; n++; sT += T; sR += tr; sTT += T * T; sRR += tr * tr; sTR += T * tr; sf += f; sfT += f * T; sfR += f * tr; }
+  const [a, b, c] = solve3([[n, sT, sR], [sT, sTT, sTR], [sR, sTR, sRR]], [sf, sfT, sfR]);
+  return { a, b, c, fref: a + b * 28 + c * 40 };
+});
+const norm = MODES.map((m, k) => times.map((t, i) => { const f = raw[k][i]; if (f == null) return null; const { a, b, c, fref } = model[k]; const { T, tr } = env[i]; return fref + (f - (a + b * T + c * tr)); }));
+const resid = MODES.map((m, k) => times.map((t, i) => norm[k][i] == null ? null : (norm[k][i] - model[k].fref) / model[k].fref * 100));
+const residStats = MODES.map((m, k) => { const v = resid[k].filter(x => x != null); return { mean: mean(v), sd: std(v) }; });
+const normMean = MODES.map((m, k) => times.map((t, i) => { let s = 0, n = 0; for (let j = Math.max(0, i - 12); j <= Math.min(LAST, i + 12); j++) if (norm[k][j] != null) { s += norm[k][j]; n++; } return n ? s / n : null; }));
+const dampMed = MODES.map((m, k) => times.map((t, i) => { const w = []; for (let j = Math.max(0, i - 12); j <= Math.min(LAST, i + 12); j++) if (damp[k][j] != null) w.push(damp[k][j]); return w.length ? median(w) : null; }));
+
+// mode shapes at the 8 deck accelerometers; the identified shape is built to hit the mock MAC value exactly
+const NS = 8, xs = Array.from({ length: NS }, (_, s) => (s + 1) / (NS + 1));
+const dot = (p, q) => p.reduce((s, v, i) => s + v * q[i], 0);
+const shapes = MODES.map(m => {
+  const ref = xs.map(x => Math.sin(m.n * Math.PI * x));
+  const noise = ref.map(() => gauss());
+  const proj = dot(noise, ref) / dot(ref, ref);
+  const perp = noise.map((v, i) => v - proj * ref[i]);
+  const theta = Math.acos(Math.sqrt(m.mac));
+  const scale = Math.sqrt(dot(ref, ref)) * Math.tan(theta) / Math.sqrt(dot(perp, perp));
+  const ident = ref.map((v, i) => v + perp[i] * scale);
+  return { ref, ident, mac: Math.pow(dot(ref, ident), 2) / (dot(ref, ref) * dot(ident, ident)) };
+});
+
+// processing latency per file, minutes
+const ttr = times.map((t, i) => Q.has(i) ? null : clamp(Math.round(21 * Math.exp(gauss() * 0.33)), 6, 58));
+
+const EVENTS = [
+  { t: Date.UTC(2026, 7, 4, 0),   type: 'system',      label: 'Baseline start', mark: false, text: 'Baseline period started (target 90 days). Alerting stays off until the reference set is signed off.' },
+  { t: Date.UTC(2026, 7, 21, 1),  type: 'maintenance', label: 'Resurfacing',    mark: true,  text: 'Deck resurfacing, lane 2, 21–23 Aug (contractor: [ ]). Night closures 23:00–05:00 local.' },
+  { t: Date.UTC(2026, 8, 9, 7),   type: 'data',        label: 'A3 clipping',    mark: true,  text: 'A3 saturated in two consecutive files during heavy rain. Input range on channel A3 to be checked.' },
+  { t: Date.UTC(2026, 8, 11, 2),  type: 'data',        label: 'A6 dead',        mark: false, text: 'A6 flat-lined in two files, 11 Sep 02:00–04:00 UTC. Files quarantined automatically.' },
+  { t: Date.UTC(2026, 8, 12, 6),  type: 'maintenance', label: 'A6 cable',       mark: true,  text: 'A6 cable reseated at the junction box. Channel back within spec from 12 Sep 06:00 UTC.' },
+  { t: Date.UTC(2026, 8, 12, 9),  type: 'note',        label: 'NTU visit',      mark: false, text: 'NTU site visit. Reference-set review with the owner proposed for early November, after the baseline.' },
+];
+const idxOf = t => clamp(Math.round((t - BASELINE_START) / H) - 1, 0, LAST);
+
+/* ================= state ================= */
+const state = { mode: 0, range: '30d' };
+const RANGES = { '7d': 7 * 24, '14d': 14 * 24, '30d': 30 * 24, 'all': LAST };
+const RANGE_WORD = { '7d': 'last 7 days', '14d': 'last 14 days', '30d': 'last 30 days', 'all': 'baseline to date' };
+const domain = () => [Math.max(0, LAST - RANGES[state.range]), LAST];
+
+/* ================= chart primitives ================= */
+function niceTicks(min, max, n) {
+  const span = max - min; if (!(span > 0)) return [min];
+  const rough = span / n, p = Math.pow(10, Math.floor(Math.log10(rough))), r = rough / p;
+  const step = (r < 1.5 ? 1 : r < 3 ? 2 : r < 7 ? 5 : 10) * p;
+  const out = []; for (let v = Math.ceil(min / step - 1e-9) * step; v <= max + 1e-9; v += step) out.push(+v.toPrecision(12));
+  return { ticks: out, step };
+}
+const decimalsFor = step => Math.max(0, -Math.floor(Math.log10(step) + 1e-9));
+
+class LineChart {
+  constructor(o) {
+    this.o = o; this.host = o.host; this.host.classList.add('chart');
+    this.svg = sv('svg', { class: 'chart-svg' }, this.host);
+    this.tip = h('div', 'tip'); this.tip.hidden = true; this.host.appendChild(this.tip);
+    this.hit = h('div', 'hit'); this.hit.tabIndex = 0; this.hit.setAttribute('role', 'group');
+    this.hit.setAttribute('aria-label', (o.aria || 'Chart') + '. Use the left and right arrow keys to move the cursor.');
+    this.host.appendChild(this.hit);
+    this.idx = null;
+    this.hit.addEventListener('pointermove', e => this.onMove(e));
+    this.hit.addEventListener('pointerleave', () => this.broadcast(null));
+    this.hit.addEventListener('keydown', e => this.onKey(e));
+    this.hit.addEventListener('focus', () => { if (this.idx == null) this.broadcast(this.i1); });
+    this.hit.addEventListener('blur', () => this.broadcast(null));
+    new ResizeObserver(() => this.render()).observe(this.host);
+  }
+  broadcast(i) { if (this.o.group) this.o.group.forEach(c => c.setIndex(i, c === this)); else this.setIndex(i, true); }
+  render() {
+    const o = this.o, W = this.host.clientWidth; if (!W) return;
+    const Hh = o.height, m = { l: o.ml ?? 56, r: o.mr ?? 16, t: o.mt ?? 16, b: o.mb ?? 24 };
+    const pw = W - m.l - m.r, ph = Hh - m.t - m.b;
+    const [i0, i1] = domain(); this.i0 = i0; this.i1 = i1; this.m = m; this.pw = pw; this.ph = ph; this.W = W;
+    const x = i => m.l + (i - i0) / (i1 - i0) * pw; this.x = x;
+    let lo = Infinity, hi = -Infinity;
+    for (const s of o.series) for (let i = i0; i <= i1; i++) { const v = s.v(i); if (v == null) continue; if (v < lo) lo = v; if (v > hi) hi = v; }
+    const rules = o.rules ? o.rules() : [];
+    for (const r of rules) { if (r.y < lo) lo = r.y; if (r.y > hi) hi = r.y; }
+    if (!isFinite(lo)) { lo = 0; hi = 1; }
+    if (o.yMin != null) lo = Math.min(lo, o.yMin);
+    if (o.yMax != null) hi = Math.max(hi, o.yMax);
+    const padv = (hi - lo) * (o.yPad ?? 0.1) || 0.5;
+    let ylo = lo - padv, yhi = hi + padv;
+    if (o.yMin != null && o.yMinHard) ylo = o.yMin;
+    if (o.yMax != null && o.yMaxHard) yhi = o.yMax;
+    const { ticks, step } = niceTicks(ylo, yhi, o.yTicks ?? 4);
+    const dec = o.yDec ?? decimalsFor(step);
+    const y = v => m.t + ph - (v - ylo) / (yhi - ylo) * ph; this.y = y;
+    const svg = this.svg; svg.textContent = '';
+    svg.setAttribute('viewBox', `0 0 ${W} ${Hh}`); svg.setAttribute('width', W); svg.setAttribute('height', Hh);
+    const g = sv('g', null, svg);
+    for (const t of ticks) { if (t < ylo || t > yhi) continue; const yy = y(t); sv('line', { x1: m.l, x2: W - m.r, y1: yy, y2: yy, class: 'grid' }, g); sv('text', { x: m.l - 8, y: yy + 3.5, class: 'tick', 'text-anchor': 'end' }, g).textContent = t.toFixed(dec); }
+    if (o.unit) sv('text', { x: m.l - 8, y: m.t - 5, class: 'unit', 'text-anchor': 'end' }, g).textContent = o.unit;
+    const days = (times[i1] - times[i0]) / D, kd = days <= 7 ? 1 : days <= 14 ? 2 : days <= 31 ? 5 : 7;
+    for (let i = i0; i <= i1; i++) {
+      if (new Date(times[i]).getUTCHours() !== 0) continue;
+      const dayIdx = Math.round((times[i] - BASELINE_START) / D); if (dayIdx % kd !== 0) continue;
+      const xx = x(i); sv('line', { x1: xx, x2: xx, y1: m.t + ph, y2: m.t + ph + 4, class: 'axis' }, g);
+      if (!o.noXLabels) sv('text', { x: xx, y: m.t + ph + 16, class: 'tick', 'text-anchor': 'middle' }, g).textContent = fmtDay(times[i]);
+    }
+    sv('line', { x1: m.l, x2: W - m.r, y1: m.t + ph, y2: m.t + ph, class: 'axis' }, g);
+    for (const r of rules) {
+      const yy = y(r.y); sv('line', { x1: m.l, x2: W - m.r, y1: yy, y2: yy, class: 'rule' + (r.dashed ? ' dashed' : '') }, g);
+      if (r.label) sv('text', { x: W - m.r, y: yy - 3, class: 'rulelabel', 'text-anchor': 'end' }, g).textContent = r.label;
+    }
+    if (o.events) { let lastEnd = -Infinity, row = 0; for (const ev of EVENTS) {
+      if (!ev.mark) continue; const ei = idxOf(ev.t); if (ei < i0 || ei > i1) continue;
+      const xx = x(ei); sv('line', { x1: xx, x2: xx, y1: m.t, y2: m.t + ph, class: 'event' }, g);
+      row = (xx + 4 < lastEnd + 6) ? row + 1 : 0;
+      const tx = sv('text', { x: xx + 4, y: m.t + 10 + row * 12, class: 'eventlabel' }, g); tx.textContent = ev.label;
+      lastEnd = xx + 4 + ev.label.length * 6;
+    } }
+    for (const s of o.series) {
+      if (s.type === 'dots') { for (let i = i0; i <= i1; i++) { const v = s.v(i); if (v == null) continue; sv('circle', { cx: x(i).toFixed(1), cy: y(v).toFixed(1), r: s.r ?? 2, style: `fill:${s.color};opacity:${s.opacity ?? 0.55}` }, g); } continue; }
+      let d = '', pen = false, last = null;
+      for (let i = i0; i <= i1; i++) { const v = s.v(i); if (v == null) { pen = false; continue; } d += (pen ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1); pen = true; last = i; }
+      if (s.type === 'area') {
+        let a = '', first = null, prev = null;
+        for (let i = i0; i <= i1; i++) { const v = s.v(i); if (v == null) continue; if (first == null) { first = i; a += 'M' + x(i).toFixed(1) + ' ' + y(v).toFixed(1); } else a += 'L' + x(i).toFixed(1) + ' ' + y(v).toFixed(1); prev = i; }
+        if (first != null) { a += 'L' + x(prev).toFixed(1) + ' ' + (m.t + ph).toFixed(1) + 'L' + x(first).toFixed(1) + ' ' + (m.t + ph).toFixed(1) + 'Z'; sv('path', { d: a, class: 'area', style: `fill:${s.color}` }, g); }
+      }
+      if (d) sv('path', { d, class: 'line', style: `stroke:${s.color}` }, g);
+      if (s.endLabel && last != null) {
+        const v = s.v(last); sv('circle', { cx: x(last), cy: y(v), r: 5.5, class: 'ring' }, g); sv('circle', { cx: x(last), cy: y(v), r: 3.5, style: `fill:${s.color}` }, g);
+        sv('text', { x: x(last) + 9, y: y(v) + 4, class: 'endlabel' }, g).textContent = s.fmt(v);
+      }
+    }
+    // crosshair layer
+    this.cg = sv('g', { style: 'display:none' }, svg);
+    this.vline = sv('line', { y1: m.t, y2: m.t + ph, class: 'vline' }, this.cg);
+    this.marks = o.series.map(s => { const r = sv('circle', { r: 5.5, class: 'ring' }, this.cg); const c = sv('circle', { r: 3.5, style: `fill:${s.color}` }, this.cg); return [r, c]; });
+    Object.assign(this.hit.style, { left: m.l + 'px', top: m.t + 'px', width: pw + 'px', height: ph + 'px' });
+    if (this.idx != null) this.setIndex(this.idx, !this.tip.hidden);
+  }
+  onMove(e) {
+    const r = this.hit.getBoundingClientRect(); const fx = clamp((e.clientX - r.left) / r.width, 0, 1);
+    this.broadcast(Math.round(this.i0 + fx * (this.i1 - this.i0)));
+  }
+  onKey(e) {
+    const stepv = e.shiftKey ? 24 : 1; let i = this.idx ?? this.i1;
+    if (e.key === 'ArrowLeft') i -= stepv; else if (e.key === 'ArrowRight') i += stepv; else if (e.key === 'Home') i = this.i0; else if (e.key === 'End') i = this.i1; else if (e.key === 'Escape') { this.broadcast(null); return; } else return;
+    e.preventDefault(); this.broadcast(clamp(i, this.i0, this.i1));
+  }
+  setIndex(i, showTip) {
+    this.idx = i;
+    if (i == null || !this.cg) { if (this.cg) this.cg.style.display = 'none'; this.tip.hidden = true; return; }
+    this.cg.style.display = '';
+    const xx = this.x(i); this.vline.setAttribute('x1', xx); this.vline.setAttribute('x2', xx);
+    this.o.series.forEach((s, k) => { const v = s.v(i); const [r, c] = this.marks[k]; const show = v != null && s.type !== 'dots' ? '' : 'none'; r.style.display = show; c.style.display = show; if (v != null) { r.setAttribute('cx', xx); r.setAttribute('cy', this.y(v)); c.setAttribute('cx', xx); c.setAttribute('cy', this.y(v)); } });
+    if (!showTip) { this.tip.hidden = true; return; }
+    const tip = this.tip; tip.textContent = '';
+    tip.appendChild(h('div', 'th', fmtWin(times[i])));
+    const rows = [];
+    for (const s of this.o.series) { const v = s.v(i); rows.push({ color: s.color, dot: s.type === 'dots', val: v == null ? (Q.has(i) ? 'file quarantined' : 'not identified') : s.fmt(v), lbl: s.tipLabel || s.label }); }
+    if (this.o.extraRows) rows.push(...this.o.extraRows(i));
+    for (const r of rows) { const row = h('div', 'row'); const key = h('i', r.dot ? 'dot' : ''); key.style.borderColor = r.color; key.style.background = r.dot ? r.color : ''; row.appendChild(key); row.appendChild(h('strong', null, r.val)); row.appendChild(h('span', 'lbl', r.lbl)); tip.appendChild(row); }
+    tip.hidden = false;
+    const tw = tip.offsetWidth; let left = xx + 14; if (left + tw > this.W - 4) left = xx - 14 - tw;
+    tip.style.left = Math.max(0, left) + 'px'; tip.style.top = (this.m.t + 4) + 'px';
+  }
+}
+
+function sparkline(svg, values, opts) {
+  svg.textContent = ''; const W = 92, Hh = 26; svg.setAttribute('viewBox', `0 0 ${W} ${Hh}`);
+  const vals = values.filter(v => v != null); if (vals.length < 2) return;
+  let lo = Math.min(...vals), hi = Math.max(...vals); if (opts && opts.min != null) lo = Math.min(lo, opts.min); if (opts && opts.max != null) hi = Math.max(hi, opts.max); if (hi === lo) hi = lo + 1;
+  const x = i => 2 + i / (values.length - 1) * (W - 4), y = v => 2 + (1 - (v - lo) / (hi - lo)) * (Hh - 4);
+  if (opts && opts.bars) { const bw = Math.max(2, (W - 4) / values.length - 1.5); values.forEach((v, i) => { if (v == null) return; const yy = y(v); sv('rect', { x: x(i) - bw / 2, y: yy, width: bw, height: Hh - 2 - yy, rx: 1, style: `fill:${i === values.length - 1 ? 'var(--accent)' : 'var(--axis)'}` }, svg); }); return; }
+  let d = '', pen = false, li = null; values.forEach((v, i) => { if (v == null) { pen = false; return; } d += (pen ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1); pen = true; li = i; });
+  sv('path', { d, style: 'fill:none;stroke:var(--axis);stroke-width:1.5;stroke-linejoin:round' }, svg);
+  if (li != null) sv('circle', { cx: x(li), cy: y(values[li]), r: 2.5, style: 'fill:var(--accent)' }, svg);
+}
+
+/* ================= data helpers ================= */
+function dailyAgg(i0, i1) {
+  const out = []; let cur = null; const k = state.mode;
+  for (let i = i0; i <= i1; i++) {
+    const d = Math.floor((times[i] - H - BASELINE_START) / D);
+    if (!cur || cur.d !== d) { cur = { d, t: BASELINE_START + d * D, n: 0, ok: 0, all5: 0, q: 0, f: [], fn: [], z: [], r: [], T: [], tr: [], ttr: [] }; out.push(cur); }
+    cur.n++; if (Q.has(i)) cur.q++; else { cur.ok++; cur.ttr.push(ttr[i]); }
+    let all = true; for (let j = 0; j < MODES.length; j++) if (raw[j][i] == null) all = false; if (all) cur.all5++;
+    if (raw[k][i] != null) { cur.f.push(raw[k][i]); cur.fn.push(norm[k][i]); cur.z.push(damp[k][i]); cur.r.push(resid[k][i]); }
+    cur.T.push(env[i].T); cur.tr.push(env[i].tr);
+  }
+  return out;
+}
+function buildTable(host, cols, rows) {
+  host.textContent = ''; const t = h('table'); const thead = h('thead'), trh = h('tr');
+  cols.forEach(c => { const th = h('th', c.num ? 'num' : '', c.label); trh.appendChild(th); }); thead.appendChild(trh); t.appendChild(thead);
+  const tb = h('tbody'); rows.forEach(r => { const tr = h('tr'); cols.forEach(c => { const td = h('td', c.num ? 'num' : '', c.get(r)); tr.appendChild(td); }); tb.appendChild(tr); }); t.appendChild(tb); host.appendChild(t);
+}
+
+/* ================= charts ================= */
+const fHz = v => v.toFixed(3) + ' Hz';
+const stack = [];
+const freqChart = new LineChart({
+  host: $('#chart-freq'), height: 290, mr: 76, unit: 'Hz', aria: 'Frequency history for the selected mode', events: true, group: stack, yDec: 3,
+  series: [
+    { label: 'Identified per window (raw)', tipLabel: 'raw', type: 'dots', color: 'var(--muted)', v: i => raw[state.mode][i], fmt: fHz },
+    { label: 'Normalised, 24 h mean', tipLabel: 'normalised, 24 h mean', type: 'line', color: 'var(--s1)', v: i => normMean[state.mode][i], fmt: fHz, endLabel: true },
+  ],
+  extraRows: i => [{ color: 'var(--s1)', dot: true, val: norm[state.mode][i] == null ? '—' : fHz(norm[state.mode][i]), lbl: 'normalised, this window' }, { color: 'var(--s2)', val: env[i].T.toFixed(1) + ' °C', lbl: 'deck temperature' }, { color: 'var(--axis)', val: Math.round(env[i].tr) + '', lbl: 'traffic index' }],
+});
+const tempChart = new LineChart({ host: $('#chart-temp'), height: 62, mr: 76, mt: 6, mb: 6, yTicks: 2, yDec: 0, noXLabels: true, group: stack, aria: 'Deck temperature',
+  series: [{ label: 'Deck temperature', type: 'area', color: 'var(--s2)', v: i => env[i].T, fmt: v => v.toFixed(1) + ' °C' }] });
+const trafficChart = new LineChart({ host: $('#chart-traffic'), height: 78, mr: 76, mt: 6, yTicks: 2, yDec: 0, yMin: 0, yMinHard: true, group: stack, aria: 'Traffic index',
+  series: [{ label: 'Traffic index', type: 'area', color: 'var(--axis)', v: i => env[i].tr, fmt: v => Math.round(v) + '' }] });
+stack.push(freqChart, tempChart, trafficChart);
+
+const dampChart = new LineChart({ host: $('#chart-damp'), height: 200, unit: '%', aria: 'Damping ratio history for the selected mode', yMin: 0, yMinHard: true,
+  series: [
+    { label: 'Per window', type: 'dots', color: 'var(--muted)', v: i => damp[state.mode][i], fmt: v => v.toFixed(2) + ' %' },
+    { label: '24 h median', type: 'line', color: 'var(--s1)', v: i => dampMed[state.mode][i], fmt: v => v.toFixed(2) + ' %' },
+  ] });
+const residChart = new LineChart({ host: $('#chart-resid'), height: 190, unit: '%', aria: 'Normalised frequency residual for the selected mode', yDec: 1,
+  rules: () => { const s = residStats[state.mode]; return [{ y: s.mean + 3 * s.sd, label: '+3σ (provisional)', dashed: true }, { y: s.mean, label: '' }, { y: s.mean - 3 * s.sd, label: '−3σ (provisional)', dashed: true }]; },
+  series: [{ label: 'Residual', type: 'line', color: 'var(--s1)', v: i => resid[state.mode][i], fmt: v => (v >= 0 ? '+' : '') + v.toFixed(2) + ' %' }] });
+
+function renderMac() {
+  const host = $('#chart-mac'); host.textContent = ''; host.classList.add('chart');
+  const W = host.clientWidth || 380, rowH = 34, ml = 96, mr = 52, mt = 22, mb = 22, Hh = mt + MODES.length * rowH + mb;
+  const svg = sv('svg', { class: 'chart-svg', viewBox: `0 0 ${W} ${Hh}`, width: W, height: Hh }, host);
+  const pw = W - ml - mr, x = v => ml + v * pw;
+  [0, 0.25, 0.5, 0.75, 1].forEach(v => { sv('line', { x1: x(v), x2: x(v), y1: mt, y2: mt + MODES.length * rowH, class: 'grid' }, svg); sv('text', { x: x(v), y: Hh - 6, class: 'tick', 'text-anchor': 'middle' }, svg).textContent = v.toFixed(2); });
+  sv('line', { x1: x(0), x2: x(0), y1: mt, y2: mt + MODES.length * rowH, class: 'axis' }, svg);
+  const tip = h('div', 'tip'); tip.hidden = true; host.appendChild(tip);
+  MODES.forEach((m, k) => {
+    const yc = mt + k * rowH + rowH / 2, mac = shapes[k].mac, bw = 18, xe = x(mac);
+    sv('text', { x: ml - 10, y: yc - 2, class: 'cat', 'text-anchor': 'end' }, svg).textContent = 'Mode ' + m.id + ' · ' + m.label;
+    sv('text', { x: ml - 10, y: yc + 11, class: 'catsub', 'text-anchor': 'end' }, svg).textContent = model[k].fref.toFixed(2) + ' Hz';
+    const bar = sv('path', { d: `M${x(0)} ${yc - bw / 2}H${(xe - 4).toFixed(1)}a4 4 0 0 1 4 4v${bw - 8}a4 4 0 0 1 -4 4H${x(0)}Z`, style: `fill:var(--s1)` }, svg);
+    sv('text', { x: xe + 8, y: yc + 4, class: 'barlabel' }, svg).textContent = mac.toFixed(2);
+    const hitr = sv('rect', { x: ml, y: yc - rowH / 2, width: pw + mr, height: rowH, fill: 'transparent', tabindex: 0, role: 'img', 'aria-label': `Mode ${m.id} ${m.label}, MAC ${mac.toFixed(2)}` }, svg);
+    const show = () => { bar.style.opacity = '.8'; tip.textContent = ''; tip.appendChild(h('div', 'th', 'Mode ' + m.id + ' · ' + m.name));
+      [[mac.toFixed(2), 'MAC vs reference'], [raw[k][LAST] == null ? 'not identified' : raw[k][LAST].toFixed(3) + ' Hz', 'last window'], [(mac >= 0.9 ? 'tracked' : 'tracked, MAC below 0.90 watch level'), 'status']].forEach(([v, l]) => { const row = h('div', 'row'); row.appendChild(h('strong', null, v)); row.appendChild(h('span', 'lbl', l)); tip.appendChild(row); });
+      tip.hidden = false; const tw = tip.offsetWidth; let left = xe + 40; if (left + tw > W) left = Math.max(0, xe - tw - 8); tip.style.left = left + 'px'; tip.style.top = Math.max(0, yc - 20) + 'px'; };
+    const hide = () => { bar.style.opacity = ''; tip.hidden = true; };
+    hitr.addEventListener('pointerenter', show); hitr.addEventListener('pointerleave', hide); hitr.addEventListener('focus', show); hitr.addEventListener('blur', hide);
+  });
+  const xt = x(0.8); sv('line', { x1: xt, x2: xt, y1: mt - 6, y2: mt + MODES.length * rowH, class: 'rule dashed' }, svg);
+  sv('text', { x: xt, y: 11, class: 'rulelabel', 'text-anchor': 'middle' }, svg).textContent = 'tracking threshold 0.80';
+}
+
+function renderShape() {
+  const host = $('#shape'); host.textContent = ''; const m = MODES[state.mode], sh = shapes[state.mode];
+  const W = 320, Hh = 150, x0 = 26, x1 = 294, yd = 82, amp = 30;
+  const svg = sv('svg', { viewBox: `0 0 ${W} ${Hh}`, style: 'width:100%;height:auto;display:block;overflow:visible', role: 'img', 'aria-label': `Mode shape sketch for mode ${m.id}` }, host);
+  sv('text', { x: 0, y: 12, class: 'catsub' }, svg).textContent = 'Mode ' + m.id + ' · ' + m.name + (m.kind === 'l' ? ' (plan view)' : ' (elevation)');
+  sv('polygon', { points: `${x0},${yd + 3} ${x0 - 8},${yd + 16} ${x0 + 8},${yd + 16}`, class: 'support' }, svg);
+  sv('polygon', { points: `${x1},${yd + 3} ${x1 - 8},${yd + 16} ${x1 + 8},${yd + 16}`, class: 'support' }, svg);
+  sv('line', { x1: x0, x2: x1, y1: yd, y2: yd, class: 'deck' }, svg);
+  const X = u => x0 + u * (x1 - x0);
+  const curve = sign => { let d = ''; for (let s = 0; s <= 60; s++) { const u = s / 60; const v = Math.sin(m.n * Math.PI * u) * amp * sign; d += (s ? 'L' : 'M') + X(u).toFixed(1) + ' ' + (yd - v).toFixed(1); } return d; };
+  if (m.kind === 't') { sv('path', { d: curve(1), class: 'shape' }, svg); sv('path', { d: curve(-1), class: 'shape faint' }, svg); }
+  else sv('path', { d: curve(1), class: 'shape' }, svg);
+  xs.forEach((u, s) => { sv('rect', { x: X(u) - 4, y: yd - 4, width: 8, height: 8, class: 'sensor' }, svg); sv('text', { x: X(u), y: yd + 30, class: 'sensorlabel', 'text-anchor': 'middle' }, svg).textContent = 'A' + (s + 1); });
+  xs.forEach((u, s) => { const v = sh.ident[s] * amp; sv('circle', { cx: X(u), cy: yd - v, r: 5, class: 'ring' }, svg); sv('circle', { cx: X(u), cy: yd - v, r: 3.5, class: 'ident' }, svg); });
+  sv('text', { x: 0, y: Hh - 4, class: 'catsub' }, svg).textContent = 'Reference shape (line) · identified, last window (dots) · MAC ' + sh.mac.toFixed(2) + (m.kind === 't' ? ' · both deck edges shown' : '');
+}
+
+/* ================= tables & lists ================= */
+function renderModeTable() {
+  const tb = $('#mode-table tbody'); tb.textContent = '';
+  MODES.forEach((m, k) => {
+    const tr = h('tr', 'clickable' + (k === state.mode ? ' sel' : '')); tr.tabIndex = 0; tr.setAttribute('role', 'button'); tr.setAttribute('aria-pressed', String(k === state.mode));
+    const td0 = h('td'); td0.appendChild(h('span', 'mode', 'Mode ' + m.id + ' · ' + m.label)); td0.appendChild(h('span', 'name', m.name)); tr.appendChild(td0);
+    tr.appendChild(h('td', 'num', model[k].fref.toFixed(3)));
+    tr.appendChild(h('td', 'num', raw[k][LAST] == null ? '—' : raw[k][LAST].toFixed(3)));
+    tr.appendChild(h('td', 'num', damp[k][LAST] == null ? '—' : damp[k][LAST].toFixed(2)));
+    tr.appendChild(h('td', 'num', shapes[k].mac.toFixed(2)));
+    const tds = h('td'); const st = h('span', 'status ' + (shapes[k].mac >= 0.9 ? 'ok' : 'warn'), shapes[k].mac >= 0.9 ? 'Tracked' : 'Watch MAC'); tds.appendChild(st); tr.appendChild(tds);
+    const pick = () => setMode(k); tr.addEventListener('click', pick); tr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+    tb.appendChild(tr);
+  });
+}
+function renderQuality() {
+  const [i0, i1] = domain(); const rows = []; const by = {}; let total = 0;
+  for (let i = i0; i <= i1; i++) { total++; if (Q.has(i)) { const q = Q.get(i); rows.push({ i, ...q }); by[q.reason] = (by[q.reason] || 0) + 1; } }
+  $('#dq-sub').textContent = `${total - rows.length} of ${total} files passed arrival validation (${RANGE_WORD[state.range]}). Quarantined files are kept unmodified and excluded from identification.`;
+  const lg = $('#dq-reasons'); lg.textContent = ''; ['Gaps', 'Clipping', 'Dead channel'].forEach(r => { const s = h('span'); s.appendChild(h('strong', 'num', String(by[r] || 0))); s.appendChild(document.createTextNode(' ' + r.toLowerCase())); lg.appendChild(s); });
+  const tb = $('#dq-table tbody'); tb.textContent = '';
+  if (!rows.length) { const tr = h('tr'); const td = h('td', null, 'No files quarantined in this range.'); td.colSpan = 6; tr.appendChild(td); tb.appendChild(tr); return; }
+  rows.reverse().forEach(r => {
+    const tr = h('tr'); tr.appendChild(h('td', 'mono', fileId(times[r.i]))); tr.appendChild(h('td', null, fmtWin(times[r.i]))); tr.appendChild(h('td', null, r.reason)); tr.appendChild(h('td', null, r.detail)); tr.appendChild(h('td', 'mono', r.ch));
+    const td = h('td'); const fixed = (r.ch === 'A6' && r.i < idxOf(EVENTS[4].t)); td.appendChild(h('span', 'status ' + (fixed ? 'ok' : 'warn'), fixed ? 'Quarantined · cause fixed' : 'Quarantined · open')); tr.appendChild(td); tb.appendChild(tr);
+  });
+}
+function renderLog() {
+  const ul = $('#event-log'); ul.textContent = '';
+  [...EVENTS].reverse().forEach(ev => {
+    const li = h('li'); const tm = h('time', null, fmtDay(ev.t) + ' ' + fmtHM(ev.t)); tm.setAttribute('datetime', new Date(ev.t).toISOString()); li.appendChild(tm);
+    li.appendChild(h('span', 'chip', ev.type + (ev.mark ? ' · on chart' : ''))); li.appendChild(h('p', null, ev.text)); ul.appendChild(li);
+  });
+}
+function renderTableViews() {
+  const [i0, i1] = domain(); const days = dailyAgg(i0, i1); const m = MODES[state.mode];
+  const avg = a => a.length ? mean(a) : null; const f3 = v => v == null ? '—' : v.toFixed(3); const f1 = v => v == null ? '—' : v.toFixed(1); const f2 = v => v == null ? '—' : v.toFixed(2);
+  buildTable($('#table-freq'), [
+    { label: 'Date (UTC)', get: r => fmtDate(r.t) }, { label: 'Windows', num: true, get: r => String(r.n) }, { label: 'All 5 modes', num: true, get: r => String(r.all5) },
+    { label: `Raw f mean, ${m.label} (Hz)`, num: true, get: r => f3(avg(r.f)) }, { label: 'Normalised mean (Hz)', num: true, get: r => f3(avg(r.fn)) },
+    { label: 'Temp mean (°C)', num: true, get: r => f1(avg(r.T)) }, { label: 'Traffic mean', num: true, get: r => r.tr.length ? String(Math.round(mean(r.tr))) : '—' },
+  ], days);
+  buildTable($('#table-damp'), [{ label: 'Date (UTC)', get: r => fmtDate(r.t) }, { label: 'Windows identified', num: true, get: r => String(r.z.length) }, { label: `ζ median, ${m.label} (%)`, num: true, get: r => r.z.length ? f2(median(r.z)) : '—' }, { label: 'ζ min–max (%)', num: true, get: r => r.z.length ? f2(Math.min(...r.z)) + ' – ' + f2(Math.max(...r.z)) : '—' }], days);
+  buildTable($('#table-resid'), [{ label: 'Date (UTC)', get: r => fmtDate(r.t) }, { label: 'Windows', num: true, get: r => String(r.r.length) }, { label: 'Residual mean (%)', num: true, get: r => r.r.length ? (avg(r.r) >= 0 ? '+' : '') + f2(avg(r.r)) : '—' }, { label: 'Largest |residual| (%)', num: true, get: r => r.r.length ? f2(Math.max(...r.r.map(Math.abs))) : '—' }, { label: 'Beyond ±3σ', num: true, get: r => { const s = residStats[state.mode]; return String(r.r.filter(v => Math.abs(v - s.mean) > 3 * s.sd).length); } }], days);
+}
+
+/* ================= KPIs & header ================= */
+function renderKpis() {
+  const [i0, i1] = domain(); let valid = 0, all5 = 0, qn = 0; const ttrs = [];
+  for (let i = i0; i <= i1; i++) { if (Q.has(i)) { qn++; continue; } valid++; let all = true; for (let k = 0; k < MODES.length; k++) if (raw[k][i] == null) all = false; if (all) all5++; ttrs.push(ttr[i]); }
+  const total = i1 - i0 + 1;
+  const idLast = MODES.filter((m, k) => raw[k][LAST] != null).length;
+  $('#kpi-idlast').textContent = ''; $('#kpi-idlast').appendChild(document.createTextNode(idLast + ' of ' + MODES.length));
+  const chips = $('#kpi-idlast-chips'); chips.textContent = ''; MODES.forEach((m, k) => chips.appendChild(h('span', 'chip' + (raw[k][LAST] != null ? ' ok' : ''), m.label + ' ' + (raw[k][LAST] == null ? '—' : raw[k][LAST].toFixed(2)))));
+  $('#kpi-idrate').textContent = (all5 / valid * 100).toFixed(1) + '%';
+  const nv = norm[state.mode].slice(i0, i1 + 1).filter(v => v != null); const cov = std(nv) / mean(nv) * 100;
+  $('#kpi-cov').textContent = cov.toFixed(2) + '%';
+  $('#kpi-files').textContent = ''; $('#kpi-files').appendChild(document.createTextNode(String(total - qn))); $('#kpi-files').appendChild(h('small', null, 'of ' + total));
+  $('#kpi-files-q').textContent = qn ? qn + ' quarantined' : 'none quarantined';
+  const med = median(ttrs), within = ttrs.filter(v => v <= 60).length / ttrs.length * 100;
+  $('#kpi-ttr').textContent = ''; $('#kpi-ttr').appendChild(document.createTextNode(Math.round(med) + '')); $('#kpi-ttr').appendChild(h('small', null, 'min'));
+  $('#kpi-ttr-share').textContent = within.toFixed(0) + '% within 1 h target';
+  const days = dailyAgg(i0, i1);
+  sparkline($('#spark-idrate'), days.map(r => r.ok ? r.all5 / r.ok * 100 : null), { min: 80, max: 100 });
+  sparkline($('#spark-cov'), days.map(r => r.fn.length > 3 ? std(r.fn) / mean(r.fn) * 100 : null), { min: 0 });
+  sparkline($('#spark-q'), days.map(r => r.q), { bars: true, min: 0, max: 2 });
+  sparkline($('#spark-ttr'), days.map(r => r.ttr.length ? median(r.ttr) : null), { min: 0, max: 60 });
+  document.querySelectorAll('.rangeword').forEach(e => e.textContent = RANGE_WORD[state.range]);
+  document.querySelectorAll('.modeword').forEach(e => e.textContent = 'Mode ' + MODES[state.mode].id);
+}
+function renderHeader() {
+  $('#pill-baseline').textContent = `Baseline period · day ${baselineDay} of ${BASELINE_DAYS}`;
+  $('#signoff-date').textContent = fmtDate(SIGNOFF);
+  $('#meta-window').textContent = fmtWin(times[LAST]);
+  const arrived = times[LAST] + 4 * 60e3, ready = arrived + ttr[LAST] * 60e3;
+  $('#meta-ready').textContent = fmtDay(ready) + ' ' + fmtHM(ready) + ' UTC'; $('#meta-ttr').textContent = ttr[LAST] + ' min';
+  $('#ph-arrived').textContent = fmtDay(arrived) + ' ' + fmtHM(arrived) + ' UTC'; $('#ph-result').textContent = fmtDay(ready) + ' ' + fmtHM(ready) + ' UTC';
+  let ok24 = 0; for (let i = LAST - 23; i <= LAST; i++) if (!Q.has(i)) ok24++; $('#ph-24h').textContent = ok24 + ' of 24 received and valid';
+  const seg = $('#mode-seg'); seg.textContent = '';
+  MODES.forEach((m, k) => { const b = h('button'); b.type = 'button'; b.id = 'mode-' + m.id; b.setAttribute('aria-pressed', String(k === state.mode)); b.appendChild(document.createTextNode('Mode ' + m.id + ' · ' + m.label)); b.appendChild(h('span', 'sub', model[k].fref.toFixed(2) + ' Hz')); b.addEventListener('click', () => setMode(k)); seg.appendChild(b); });
+}
+
+/* ================= update flow ================= */
+function setMode(k) { state.mode = k; update(); }
+function setRange(r) { state.range = r; update(); }
+function update() {
+  document.querySelectorAll('#mode-seg button').forEach((b, k) => b.setAttribute('aria-pressed', String(k === state.mode)));
+  document.querySelectorAll('#range-seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.range === state.range)));
+  const m = MODES[state.mode], t = 'Mode ' + m.id + ' · ' + m.label;
+  $('#freq-title').textContent = t + ' — frequency'; $('#damp-title').textContent = t + ' — damping ratio'; $('#resid-title').textContent = t + ' — normalised residual';
+  renderKpis(); [freqChart, tempChart, trafficChart, dampChart, residChart].forEach(c => c.render());
+  renderModeTable(); renderShape(); renderQuality(); renderTableViews();
+}
+document.querySelectorAll('#range-seg button').forEach(b => b.addEventListener('click', () => setRange(b.dataset.range)));
+renderHeader(); renderLog(); renderMac(); update();
+new ResizeObserver(() => renderMac()).observe($('#chart-mac').parentElement);
+})();
+</script>
+</body>
+</html>

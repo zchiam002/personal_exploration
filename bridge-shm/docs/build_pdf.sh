@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Render docs/PRD.md -> docs/PRD.pdf (A4, footer with page numbers).
+# Render the PRD documents in this folder to PDF (A4, footer with page numbers):
+#   PRD.md                -> PRD.pdf                (stylesheet prd.css)
+#   PRD-plain-language.md -> PRD-plain-language.pdf (stylesheet prd-plain.css)
 # Requires:
 #   - pandoc >= 2.x with the gfm reader and --pdf-engine=weasyprint support (apt install pandoc)
 #   - weasyprint on PATH (pip install weasyprint) plus its system libs: pango, cairo, gdk-pixbuf
@@ -11,13 +13,19 @@
 set -euo pipefail
 export LC_ALL=C.UTF-8   # pandoc decodes CLI args with the locale; keep the em dash in the title intact
 cd "$(dirname "$0")"
-pandoc PRD.md \
-  --from gfm \
-  --to html5 \
-  --standalone \
-  --columns=400 \
-  --metadata pagetitle="Bridge Vibration Monitoring Platform — PRD v0.1" \
-  --css prd.css \
-  --pdf-engine=weasyprint \
-  --output PRD.pdf
-echo "Wrote $(pwd)/PRD.pdf"
+
+render() { # render <input.md> <output.pdf> <stylesheet.css> <title>
+  pandoc "$1" \
+    --from gfm \
+    --to html5 \
+    --standalone \
+    --columns=400 \
+    --metadata pagetitle="$4" \
+    --css "$3" \
+    --pdf-engine=weasyprint \
+    --output "$2"
+  echo "Wrote $(pwd)/$2"
+}
+
+render PRD.md PRD.pdf prd.css "Bridge Vibration Monitoring Platform — PRD v0.1"
+render PRD-plain-language.md PRD-plain-language.pdf prd-plain.css "Bridge Vibration Monitoring Platform — PRD v0.1, plain-language edition"

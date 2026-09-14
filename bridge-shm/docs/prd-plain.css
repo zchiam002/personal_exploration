@@ -1,0 +1,6 @@
+/* Print stylesheet for PRD-plain-language.md: same layout as prd.css, different footer text */
+@import url("prd.css");
+@page {
+  @bottom-left { content: "Bridge Vibration Monitoring Platform — PRD v0.1, plain-language edition (Draft)"; }
+}
+h2 { margin-top: 16pt; }
