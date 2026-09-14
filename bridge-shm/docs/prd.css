@@ -1,0 +1,64 @@
+/* Print stylesheet for docs/PRD.md -> docs/PRD.pdf (pandoc + weasyprint) */
+@page {
+  size: A4;
+  margin: 22mm 20mm 24mm 20mm;
+  @bottom-left {
+    content: "Bridge Vibration Monitoring Platform — PRD v0.1 (Draft)";
+    font-family: "Liberation Sans", "DejaVu Sans", sans-serif;
+    font-size: 8.5pt;
+    color: #555;
+  }
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    font-family: "Liberation Sans", "DejaVu Sans", sans-serif;
+    font-size: 8.5pt;
+    color: #555;
+  }
+}
+
+html { font-size: 10.5pt; }
+body {
+  font-family: "Liberation Sans", "DejaVu Sans", sans-serif;
+  line-height: 1.45;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+h1 {
+  font-size: 20pt;
+  line-height: 1.25;
+  margin: 0 0 10pt 0;
+  padding-bottom: 6pt;
+  border-bottom: 1.5pt solid #333;
+}
+h2 {
+  font-size: 13.5pt;
+  margin: 18pt 0 6pt 0;
+  page-break-after: avoid;
+  break-after: avoid;
+}
+p { margin: 0 0 7pt 0; }
+strong { font-weight: bold; }
+
+ul { margin: 0 0 9pt 0; padding-left: 18pt; }
+li { margin: 0 0 3pt 0; }
+li > p { margin: 0; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 6pt 0 12pt 0;
+  font-size: 9.5pt;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+th, td {
+  border: 0.6pt solid #999;
+  padding: 4pt 6pt;
+  vertical-align: top;
+  text-align: left;
+}
+th { background: #ececec; font-weight: bold; }
+th:nth-child(1), td:nth-child(1) { width: 20%; }
+th:nth-child(2), td:nth-child(2) { width: 46%; }
+th:nth-child(3), td:nth-child(3) { width: 34%; }
