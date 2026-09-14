@@ -34,7 +34,20 @@ FEEDS = {
     "New Civil Engineer": "https://www.newcivilengineer.com/feed/",
     "Tunnelling Journal": "https://www.tunnellingjournal.com/feed/",
     "PV-Tech": "https://www.pv-tech.org/feed/",
+    # Asia-specific
+    "Offshore Energy (Asia)": "https://www.offshore-energy.biz/region/asia/feed/",
+    "AOG Digital": "https://www.aogdigital.com/rss",
+    "Energy Oil & Gas": "https://www.energy-oil-gas.com/feed/",
+    "Offshore Technology": "https://www.offshore-technology.com/feed/",
+    "Business Times SG": "https://www.businesstimes.com.sg/rss/companies-markets",
+    "CNA Singapore": "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=6511",
+    "Straits Times SG": "https://www.straitstimes.com/news/singapore/rss.xml",
 }
+# Sources with no usable feed; set up e-mail alerts instead and parse the mailbox:
+#   GeBIZ (gebiz.gov.sg) keyword alerts: "soil investigation", "site investigation", "instrumentation"
+#   AusTender (tenders.gov.au) saved search: "geotechnical"
+#   PETRONAS media releases, TNB and Masdar newsrooms: manual weekly check
+#   LinkedIn saved-search e-mails for "geotechnical client representative", "resident engineer geotechnical"
 
 # CORE terms describe the work itself. An item must hit at least one of them
 # to be reported at all; everything else only adds weight.

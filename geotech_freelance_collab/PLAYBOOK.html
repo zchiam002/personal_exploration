@@ -1,0 +1,898 @@
+<title>Guang Jie Geotech Playbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{--paper:#F2F4F3;--ink:#1B262C;--mute:#5B6B70;--line:#C6D0CD;--sea:#0D6E6A;--soil:#A9631C;--tint:#E4E9E7;--tint2:#D9E6E4;--tint3:#EFE4D6;--tint4:#E8E2DA}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--paper:#121A1D;--ink:#E3EAE8;--mute:#98A8AC;--line:#2A383D;--sea:#3FC1BB;--soil:#DB9A4A;--tint:#1B262B;--tint2:#183034;--tint3:#2B241B;--tint4:#262A28}}
+:root[data-theme="dark"]{--paper:#121A1D;--ink:#E3EAE8;--mute:#98A8AC;--line:#2A383D;--sea:#3FC1BB;--soil:#DB9A4A;--tint:#1B262B;--tint2:#183034;--tint3:#2B241B;--tint4:#262A28}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Source Serif 4",Georgia,"Times New Roman",serif;font-size:17px;line-height:1.55;padding-inline:20px;padding-block:32px 80px}
+.wrap{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:32px}
+@media (min-width:960px){.wrap{grid-template-columns:150px minmax(0,1fr)}}
+h1,h2,h3,h4{font-family:"Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:clamp(34px,5vw,52px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:28px;font-weight:600;margin-top:56px;padding-top:14px;border-top:2px solid var(--ink);display:flex;gap:12px;align-items:baseline}
+h2::before{content:"";width:14px;height:14px;flex:none;background:var(--sea);transform:translateY(-1px)}
+h2:nth-of-type(2n)::before{background:var(--soil)}
+h3{font-size:21px;font-weight:600;margin-top:32px;color:var(--ink)}
+h4{font-size:17px;font-weight:600;margin-top:22px;color:var(--sea);text-transform:uppercase;letter-spacing:.04em}
+p,li{max-width:68ch} p{margin:14px 0}
+ul,ol{padding-left:22px;margin:12px 0} li{margin:6px 0}
+a{color:var(--sea);text-decoration-thickness:1px;text-underline-offset:2px}
+strong{font-weight:600}
+code{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:.86em;background:var(--tint);padding:1px 5px;border-radius:3px}
+blockquote{margin:14px 0;padding:10px 16px;border-left:3px solid var(--soil);background:var(--tint);max-width:68ch;font-style:italic}
+blockquote p{margin:0}
+.tbl{overflow-x:auto;margin:18px 0;border-top:1px solid var(--ink)}
+table{border-collapse:collapse;width:100%;font-family:"Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;font-size:15.5px;line-height:1.35;font-variant-numeric:tabular-nums}
+th{text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-size:12.5px;color:var(--mute);padding:8px 10px 6px;border-bottom:1px solid var(--line);vertical-align:bottom}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+td:first-child{white-space:nowrap}
+tr:hover td{background:var(--tint)}
+/* title block, drawn like a drawing title block */
+.tb{border:1.5px solid var(--ink);display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:22px 0 8px}
+.tb div{padding:8px 12px;border-right:1px solid var(--line);border-top:1px solid var(--line)}
+.tb div:first-child{grid-column:1/-1;border-top:0;padding:14px 12px 10px}
+.tb .l{display:block;font-family:"Barlow Semi Condensed",Arial,sans-serif;font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute)}
+.tb .v{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:14px}
+.lede{font-size:19px;max-width:66ch;color:var(--ink);margin-top:18px}
+/* borehole-log rail */
+.rail{display:none}
+@media (min-width:960px){.rail{display:block;position:sticky;top:24px;align-self:start}
+.rail .scale{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--mute);display:flex;justify-content:space-between;padding:0 2px 4px;border-bottom:1px solid var(--ink)}
+.band{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:52px;padding:6px 8px;border:1px solid var(--line);border-top:0;text-decoration:none;color:var(--ink);background-color:var(--tint)}
+.band.p0{background-image:repeating-linear-gradient(45deg,transparent 0 6px,rgba(13,110,106,.18) 6px 7px)}
+.band.p1{background-image:radial-gradient(rgba(169,99,28,.35) 1px,transparent 1.5px);background-size:8px 8px}
+.band.p2{background-image:repeating-linear-gradient(0deg,transparent 0 5px,rgba(13,110,106,.16) 5px 6px)}
+.band.p3{background-image:repeating-linear-gradient(-45deg,transparent 0 6px,rgba(169,99,28,.22) 6px 7px)}
+.band:hover,.band:focus-visible{outline:2px solid var(--sea);outline-offset:-2px}
+.band .k{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--mute)}
+.band .t{font-family:"Barlow Semi Condensed",Arial,sans-serif;font-size:13px;font-weight:600;line-height:1.15}
+.rail .foot{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--mute);padding:6px 2px;border-top:1px solid var(--ink)}}
+:focus-visible{outline:2px solid var(--sea);outline-offset:2px}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+@media print{.rail{display:none} .wrap{display:block} body{padding:0;font-size:11pt;background:#fff;color:#111} h2{break-after:avoid} tr{break-inside:avoid} a{color:inherit}}
+</style>
+<div class="wrap">
+<nav class="rail" aria-label="Sections">
+<div class="scale"><span>LOG</span><span>SECTION</span></div>
+<a class="band p0" href="#1-summary"><span class="k">1</span><span class="t">Summary</span></a>
+<a class="band p1" href="#2-what-his-freelancing-is-and-what-a-job-pays"><span class="k">2</span><span class="t">What his freelancing is, and what a job pays</span></a>
+<a class="band p2" href="#3-where-the-work-is-in-2026"><span class="k">3</span><span class="t">Where the work is in 2026</span></a>
+<a class="band p3" href="#4-nine-things-his-skills-sell-as"><span class="k">4</span><span class="t">Nine things his skills sell as</span></a>
+<a class="band p0" href="#5-directions-to-explore-beyond-60-days"><span class="k">5</span><span class="t">Directions to explore beyond 60 days</span></a>
+<a class="band p1" href="#6-the-30-day-plan"><span class="k">6</span><span class="t">The 30-day plan</span></a>
+<a class="band p2" href="#7-what-laminar-flow-has-built"><span class="k">7</span><span class="t">What Laminar Flow has built</span></a>
+<a class="band p3" href="#8-constraints"><span class="k">8</span><span class="t">Constraints</span></a>
+<a class="band p0" href="#appendix-a-outreach-kit"><span class="k">A</span><span class="t">Outreach kit</span></a>
+<a class="band p1" href="#appendix-b-priority-targets"><span class="k">B</span><span class="t">Priority targets</span></a>
+<a class="band p2" href="#appendix-c-later-product-options-deferred-until-he-is-billing"><span class="k">C</span><span class="t">Later: product options (deferred until he is billing)</span></a>
+<a class="band p3" href="#sources"><span class="k">§</span><span class="t">Sources</span></a>
+<div class="foot">Strata are sections, not soils.</div>
+</nav>
+<main>
+<h1>Guang Jie Geotech Playbook</h1>
+<div class="tb">
+<div><span class="l">Project</span><span class="v">Paid work for an independent geotechnical engineer, 2026–27</span></div>
+<div><span class="l">Prepared for</span><span class="v">Tuang Guang Jie</span></div>
+<div><span class="l">Prepared by</span><span class="v">Laminar Flow</span></div>
+<div><span class="l">Date</span><span class="v">14 Sep 2026</span></div>
+<div><span class="l">Revision</span><span class="v">1 · for discussion</span></div>
+</div>
+<p class="lede">Where the soil work is this year, what each job pays, the nine things his skills sell as, the directions worth exploring, and a 30-day outreach plan with the radar, target list and drafts already built.</p>
+<h2 id="1-summary">1. Summary</h2>
+<p>His freelance market has narrowed to offshore energy, and offshore wind, the busiest part of it since 2021, is in a documented slump until at least 2027. His skills are wider than that market. In 2026 the busiest buyers of soil-investigation, foundation-analysis, instrumentation and laboratory skills in his region are onshore and nearshore construction in Singapore and Johor, Malaysian carbon-capture and decommissioning programmes, Australian decommissioning and infrastructure, and the dispute and review market.</p>
+<p>The plan has three layers:</p>
+<ol>
+<li><strong>Income in weeks.</strong> Expert-network calls, agency-placed rotations (offshore and onshore), and trigger-based direct outreach to companies that have just won work.</li>
+<li><strong>Volume in months.</strong> Singapore and Johor construction, where he presents as a site-investigation, instrumentation and lab engineer rather than an offshore specialist.</li>
+<li><strong>Structure in a year.</strong> Professional Engineer registration in Singapore, an expert-witness listing, and two or three niches (floating-solar anchoring, decommissioning positioning) where his rig-move history is rare.</li>
+</ol>
+<p>Laminar Flow's part is to make his outreach specific and timely: a daily radar of contract awards and campaign starts, a named target list, three CV framings, a capability statement with fixed prices, and drafted messages that reference the trigger. He does the calls and the engineering. Product ideas wait until he is billing again.</p>
+<h2 id="2-what-his-freelancing-is-and-what-a-job-pays">2. What his freelancing is, and what a job pays</h2>
+<p>Clients hire him by the day or by the job to find out what the ground will do under a structure. Four kinds of work:</p>
+<ul>
+<li><strong>Site-investigation supervision.</strong> On a drilling vessel or rig as the client's representative, checking that the contractor drills, samples and tests correctly, and signing off the data. Most of his income since 2018.</li>
+<li><strong>Analysis.</strong> Whether a jack-up rig's legs will sink safely (leg penetration to ISO 19905-1), how deep piles must go and whether they can be driven, pile ageing, mudmat stability for subsea structures, conductor setting depth.</li>
+<li><strong>Reporting and review.</strong> Factual and interpretive reports; third-party QC of other engineers' work.</li>
+<li><strong>Project management and tendering.</strong> Pricing and running soil-investigation contracts (FOSTA), and a PUB sewer-rehabilitation contract (Smitech).</li>
+</ul>
+<h3 id="21-planning-ranges-per-job">2.1 Planning ranges per job</h3>
+<p>Sourced figures are marked; the rest are working estimates to be checked against his own past invoices in week 1.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Offer</th>
+<th>Unit</th>
+<th>Range</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Offshore client rep / QC, APAC</td>
+<td>Day</td>
+<td>USD 600–1,000; North Sea USD 800–1,400</td>
+<td>Published offshore survey day-rate spread USD 150–1,400 and EUR 250–800+; senior client reps sit at the top (sourced)</td>
+</tr>
+<tr>
+<td>One offshore campaign</td>
+<td>4–8 week rotation</td>
+<td>USD 17,000–56,000 gross</td>
+<td>Day rate × days on board; a 28/28 rotation leaves half the year unpaid</td>
+</tr>
+<tr>
+<td>Onshore Singapore SI / instrumentation engineer</td>
+<td>Day or month</td>
+<td>S$450–700 per day; S$7,000–9,000 per month</td>
+<td>Senior geotechnical salaries ~S$89k per year plus the 10–20 % 2026 premium for hard-to-fill roles (sourced), converted to contract</td>
+</tr>
+<tr>
+<td>Jack-up leg-penetration assessment</td>
+<td>Per location</td>
+<td>USD 3,000–8,000 as an independent</td>
+<td>Consultancies quote case by case; no public price list (estimate)</td>
+</tr>
+<tr>
+<td>Pile capacity / driveability / mudmat package</td>
+<td>Per structure</td>
+<td>USD 4,000–15,000</td>
+<td>Estimate</td>
+</tr>
+<tr>
+<td>Report writing or third-party review</td>
+<td>Per report</td>
+<td>USD 1,500–6,000</td>
+<td>Estimate</td>
+</tr>
+<tr>
+<td>Lab data QC / lab witness / ISO 17025 readiness</td>
+<td>Day or fixed</td>
+<td>S$500–800 per day; S$8,000–20,000 per readiness package</td>
+<td>Estimate</td>
+</tr>
+<tr>
+<td>Instrumentation interpretation retainer</td>
+<td>Month</td>
+<td>S$3,000–8,000 part-time on one job</td>
+<td>Estimate</td>
+</tr>
+<tr>
+<td>Expert-network call</td>
+<td>Hour</td>
+<td>USD 200–500</td>
+<td>Published network rate guidance (sourced)</td>
+</tr>
+<tr>
+<td>Expert witness</td>
+<td>Day</td>
+<td>S$2,500–5,000 once established</td>
+<td>Singapore convention for senior engineering experts (estimate)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Rule of thumb: one offshore rotation a quarter plus two fixed-price analysis packages a month replaces a full-time senior salary, and the fixed-price part does not depend on a vessel sailing.</p>
+<h2 id="3-where-the-work-is-in-2026">3. Where the work is in 2026</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Market</th>
+<th>What is happening</th>
+<th>Roles he fits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Singapore onshore</strong></td>
+<td>Construction demand S$32–38 bn; Changi T5 substructure and tunnels (to 2029); Cross Island Line Phase 2 (six underground stations, to 2032); Tuas Port; HDB programme. ~15 % engineer shortfall; hard-to-fill roles paying 10–20 % over 2024</td>
+<td>SI supervising engineer, instrumentation and monitoring, ground-improvement QC, lab data review, tender support, resident engineer's geotechnical assistant</td>
+</tr>
+<tr>
+<td><strong>Singapore nearshore</strong></td>
+<td>Long Island 800 ha preparatory works from end-2026; Pulau Tekong 800 ha polder; Northern Tuas Basin reclamation instrumentation; East Coast protection</td>
+<td>Nearshore SI, settlement monitoring, reclamation QC</td>
+</tr>
+<tr>
+<td><strong>Johor / Malaysia onshore</strong></td>
+<td>JS-SEZ; Johor is APAC's largest data-centre market (5 GW+ pipeline; ~2.4 GW under construction in SE Asia in H1 2026); RTS Link opens Dec 2026</td>
+<td>Campus SI, piling supervision, load-test interpretation</td>
+</tr>
+<tr>
+<td><strong>Malaysia offshore</strong></td>
+<td>HELMS Geomarine's 3+2-year PETRONAS CCS SI frame (jack-up assessments, driveability, reporting); PETRONAS Carigali tendering removal of up to 31 platforms; ~9 jack-ups needed in 2026; PETRONAS 2026 bid round</td>
+<td>Remote jack-up and driveability packages, decommissioning positioning, third-party review</td>
+</tr>
+<tr>
+<td><strong>Floating solar</strong></td>
+<td>Kenyir 595 MW (construction from Jun 2026), Masdar's Chereh 200 MW, LSS6 2 GW with a larger floating share; Cirata needed ~2,500 anchors in very soft soil at up to 90 m</td>
+<td>Lakebed SI, anchor design in soft soils</td>
+</tr>
+<tr>
+<td><strong>Australia</strong></td>
+<td>Bass Strait decommissioning (Allseas, 12 topsides and 11 jackets, lifts from 2027); Northern Endeavour Phase 3a tender (Aug 2026); geotechnical engineer on the skills-shortage list, 68 % vacancy fill rate</td>
+<td>Vessel-positioning assessments, remote analysis contracts, sponsorship route</td>
+</tr>
+<tr>
+<td><strong>Oil and gas offshore</strong></td>
+<td>Aramco restarting eight suspended jack-ups; Chevron's North Malay campaign on NAGA 8 from Aug 2026; India's ONGC unpredictable after four cancelled jack-up tenders</td>
+<td>Rig-move SSA, client rep</td>
+</tr>
+<tr>
+<td><strong>Offshore wind survivors</strong></td>
+<td>Fugro's FengMiao II SI for CIP (Taiwan) through Q3 2026; Ørsted Incheon surveys done; Korea awarded 1.786 GW in H1 2026; Japan Round 3 winners at Aomori South and Yuza</td>
+<td>Client rep, QC, design-phase review</td>
+</tr>
+<tr>
+<td><strong>Subsea cables</strong></td>
+<td>Singapore landings 2026–28 to SE Asia, US/Guam, Middle East and Australia</td>
+<td>Route-survey client rep, burial-assessment review</td>
+</tr>
+<tr>
+<td><strong>Middle East</strong></td>
+<td>NEOM cancelled USD 6.85 bn of contracts in March 2026 but the regional geotechnical market is still growing; primes advertise roles</td>
+<td>Agency-placed only</td>
+</tr>
+</tbody>
+</table></div>
+<p>Why the slump is not about him: Fugro's offshore-wind backlog is down 47 % year-on-year and it is laying up 5–7 vessels; Taiwan's Round 3.1 shrank from 8.7 GW awarded to about 2.3 GW proceeding; Japan cancelled 1.7 GW and postponed Round 4. Freelance day rates are the first thing cut and the first restored.</p>
+<h2 id="4-nine-things-his-skills-sell-as">4. Nine things his skills sell as</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Offer</th>
+<th>Buyer</th>
+<th>Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Client representative / QC on SI campaigns (offshore, nearshore, onshore)</td>
+<td>Developers, owner's engineers, SI contractors</td>
+<td>Day rate, rotation</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Jack-up leg-penetration and SSA packages</td>
+<td>Rig movers, marine warranty surveyors, drilling and decommissioning contractors</td>
+<td>Fixed price, remote</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Pile capacity, driveability, ageing, mudmat, conductor setting depth</td>
+<td>EPCs, SI contractors without in-house engineers</td>
+<td>Fixed price, remote</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Laboratory data review and QC, lab witness, ISO/IEC 17025 readiness</td>
+<td>SI contractors, labs seeking SAC-SINGLAS scope, developers</td>
+<td>Fixed price or day rate</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Instrumentation and settlement-monitoring interpretation</td>
+<td>Reclamation and ground-improvement contractors, PUB/HDB consultants</td>
+<td>Day rate or retainer</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Factual and interpretive report writing, third-party review</td>
+<td>Small consultancies and contractors with backlog</td>
+<td>Per report</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Tender support for SI contractors</td>
+<td>Contractors bidding GeBIZ and private work</td>
+<td>Per tender</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Expert-network calls and briefings</td>
+<td>GLG, AlphaSights, Guidepoint, Dialectica, Coleman, Third Bridge</td>
+<td>Hourly</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Project or operations management for SI or civil contractors</td>
+<td>Contractors short of PMs</td>
+<td>Contract or permanent</td>
+</tr>
+</tbody>
+</table></div>
+<p>Offers 2–7 need no vessel and no mobilisation.</p>
+<h2 id="5-directions-to-explore-beyond-60-days">5. Directions to explore beyond 60 days</h2>
+<ol>
+<li><strong>Professional Engineer (Civil) registration in Singapore, then Specialist PE (Geotechnical).</strong> PEB's April 2026 guidelines list SI and testing, pile load testing and interpretation, and instrumentation and monitoring as the core competencies, which he has. It converts him from engineer to signatory, roughly S$600 to S$1,500 a day. Low cost; 12–24 months.</li>
+<li><strong>Expert witness and forensic geotechnics.</strong> SIAC, SICC and SOP-Act adjudications in Singapore; AIAC in Malaysia (new 2026 rules); insurers' loss adjusters on settlement, slope and foundation claims. Entry: directory listings, two short forensic case notes, an expert-witness course.</li>
+<li><strong>Floating-solar anchoring for SEA.</strong> Malaysia's LSS6, Kenyir and Chereh, and Indonesia's reservoir programmes need lakebed SI and anchor design in soft soils. Offshore mudmat and anchor thinking applied to reservoirs; few in the region have both.</li>
+<li><strong>Decommissioning positioning.</strong> Malaysia's 31 platforms and Bass Strait need jack-up and heavy-lift assessments next to old, sometimes scoured foundations.</li>
+<li><strong>Data-centre foundations in Johor.</strong> A standing relationship with two or three piling contractors and one owner's engineer.</li>
+<li><strong>Australia.</strong> Engineers Australia (CPEng or NER) registration, remote contracts first, sponsorship later.</li>
+<li><strong>Training and lecturing.</strong> BCA Academy, polytechnics, NTU part-time modules. Low pay, high credibility.</li>
+<li><strong>Lab accreditation consulting.</strong> Regional SI contractors need ISO/IEC 17025 scope to bid public work.</li>
+<li><strong>Own analysis products</strong> once he is billing: a productized leg-penetration assessment and report automation (Appendix C).</li>
+</ol>
+<h2 id="6-the-30-day-plan">6. The 30-day plan</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Week</th>
+<th>Him</th>
+<th>Laminar Flow</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Register with agencies and expert networks; approve the three CVs and the LinkedIn rewrite; confirm he will send 15 messages a week</td>
+<td>Deliver CVs, capability statement, target list v1; radar running daily</td>
+<td>12 registrations, 3 expert-network profiles live</td>
+</tr>
+<tr>
+<td>2</td>
+<td>15 trigger-based messages (5 offshore, 10 onshore/Johor); 3 recruiter calls</td>
+<td>Draft messages from radar hits; add e-mail alert sources</td>
+<td>15 sent, 4 replies</td>
+</tr>
+<tr>
+<td>3</td>
+<td>15 more; day-7 follow-ups; PEB eligibility check</td>
+<td>LLM extraction of company/project/scope from hits; tracker</td>
+<td>1 expert call, 2 interviews</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Same; price the first fixed-price job</td>
+<td>Pipeline review; drop segments with no replies, double those with replies</td>
+<td>1 paid engagement</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Registrations (two days):</strong> Atlas Professionals, NES Fircroft, Airswift, Brunel, SA World, Spencer Ogden, EPI Group, Precise Consultants; Corestaff, PERSOLKELLY, Randstad, Hays, Michael Page; GLG, AlphaSights, Guidepoint, Dialectica, Coleman, Third Bridge; Expert Services International; a PEB portal account; GeBIZ, AusTender and LinkedIn keyword alerts.</p>
+<h2 id="7-what-laminar-flow-has-built">7. What Laminar Flow has built</h2>
+<ul>
+<li><strong>Opportunity radar</strong> (<code>opportunity_radar.py</code>). Reads seventeen feeds across offshore energy, ground engineering, tunnelling, civil engineering, solar, rigs, maritime and Singapore and Asia business news. Reports only items with geotechnical content, then weights demand triggers (awards, campaigns, rig moves, decommissioning, CCS, cables, reclamation, data centres, floating solar, MRT and airport works, disputes), geography he can reach, and named buyers including Singapore agencies and the large marine and civil contractors. Scores titles and summaries only, to avoid sidebar noise. Standard library, cron-able. The first two weeks are calibration; sources without feeds (GeBIZ, AusTender, PETRONAS, LinkedIn) go through e-mail alerts parsed from the mailbox.</li>
+<li><strong>Target list</strong> (<code>target_list.csv</code>, 104 rows). Segment, company, base, why now, role to contact, channel, and which of the nine offers fits. Priority 1 rows appear in Appendix B.</li>
+<li><strong>Outreach kit</strong> (<code>outreach_kit.md</code>). Three CV framings, capability statement, LinkedIn rewrite, six message templates, registration links. Reproduced in Appendix A.</li>
+</ul>
+<p>Next: e-mail-alert parsing, an LLM pass that extracts {company, project, location, scope, phase} from each hit and drafts the message, and a simple tracker.</p>
+<h2 id="8-constraints">8. Constraints</h2>
+<ul>
+<li><strong>Onshore Singapore work wants a PE or a PE-supervised role.</strong> Without PE he is hired as engineer, not signatory; fine for cash flow and the argument for §5.1.</li>
+<li><strong>Local content</strong> in Malaysia and Indonesia favours nationals. His Malaysia play is remote analysis packages and Johor site work reachable from Singapore.</li>
+<li><strong>Rate reset.</strong> Onshore day rates are lower than offshore; the fixed-price menu and the PE route are how he climbs back.</li>
+<li><strong>Competition</strong> from engineers Fugro is releasing. Specificity and speed of outreach are the edge.</li>
+<li><strong>Liability and confidentiality.</strong> Signed reports are his; he should confirm professional-indemnity cover before the first fixed-price job. Past reports belong to clients and are used only anonymised or with permission.</li>
+<li><strong>He must send the messages.</strong> Confirm in week 1.</li>
+</ul>
+<h2 id="appendix-a-outreach-kit">Appendix A. Outreach kit</h2>
+<p>Drafts for him to edit. Everything below is built from his LinkedIn profile; he should correct any project detail before it goes out.</p>
+<h3 id="a1-three-cv-framings">A.1. Three CV framings</h3>
+<p>Same facts, three orderings. Each opens with the two lines a recruiter's Boolean search and a hiring manager's first glance both need.</p>
+<h4 id="a-offshore-client-representative-qc-for-atlas-nes-airswift-sa-world-epi-developers">A. Offshore client representative / QC (for Atlas, NES, Airswift, SA World, EPI, developers)</h4>
+<p><strong>Headline:</strong> Offshore Geotechnical Client Representative and QC Engineer, 20 years, Singapore-based, available on 14 days' notice.</p>
+<ul>
+<li>Client representative, QC, site manager and lead engineer on offshore, nearshore and onshore soil investigations since 2012; independent since 2018.</li>
+<li>Rig moves, offshore drilling and sampling, downhole CPTu, laboratory programmes, factual and interpretive reporting; third-party engineering QC.</li>
+<li>Fugro Singapore 2008–2011: Woodside Browse LNG (data processing), PEMEX Bay of Campeche drilling and sampling, Irish Sea windfarm downhole investigations, campaigns in Australia, Indonesia, Thailand, Vietnam, China, India.</li>
+<li>Standards and tools: ISO 19905-1, API RP 2GEO / ISO 19901-4, AGS, gINT, JURIG3, APICAP, Uniplot, Geodin, GRLWEAP-type driveability.</li>
+<li>Leadership: nine years as Platoon Sergeant and Company Sergeant Major, SAF Commandos; accountable for 30 men's safety and conduct.</li>
+<li>BEng, Nanyang Technological University. BOSIET (renew if lapsed).</li>
+</ul>
+<h4 id="b-engineering-analysis-for-marine-warranty-firms-rig-movers-epcs-si-contractors-without-in-house-engineers">B. Engineering analysis (for marine warranty firms, rig movers, EPCs, SI contractors without in-house engineers)</h4>
+<p><strong>Headline:</strong> Offshore Foundation Analyst: jack-up leg penetration, pile capacity and driveability, mudmat stability. Fixed-price packages, 48-hour turnaround.</p>
+<ul>
+<li>Leg-penetration and site-specific assessment inputs to ISO 19905-1; punch-through, squeezing and backflow checks; extraction.</li>
+<li>Pile capacity (API/ISO), driveability, pile ageing (set-up), conductor setting depth, mudmat and shallow-foundation stability for subsea structures.</li>
+<li>Soil parameter derivation from CPT, borehole and laboratory data; factual and interpretive reports; third-party review.</li>
+<li>Senior Geotechnical Engineer / Project Manager, FOSTA 2016–2018: SI tenders, budgets, parameter recommendation, foundation-type analyses.</li>
+<li>14 years of analyses on live rig moves and installation campaigns across SE Asia, Australia and the Gulf of Mexico.</li>
+</ul>
+<h4 id="c-onshore-si-instrumentation-and-laboratory-for-singapore-and-johor-contractors-consultants-and-labs">C. Onshore SI, instrumentation and laboratory (for Singapore and Johor contractors, consultants and labs)</h4>
+<p><strong>Headline:</strong> Geotechnical Engineer for site investigation supervision, instrumentation interpretation and laboratory data QC. Singapore-based, immediate.</p>
+<ul>
+<li>20 years of soil investigation: drilling and sampling supervision, in-situ testing, laboratory programmes, data processing and reporting.</li>
+<li>Project Manager, Smitech Engineering 2011–2012: PUB Phase 4 sewer rehabilitation (42 km, 1,000 manholes), planning, cost, risk and client liaison.</li>
+<li>Senior Geotechnical Engineer / PM, FOSTA 2016–2018: SI tendering and project delivery in Singapore.</li>
+<li>Fugro laboratory and data-processing background; familiar with ASTM/BS test methods, AGS data, gINT; able to support ISO/IEC 17025 readiness.</li>
+<li>Instrumentation and settlement monitoring interpretation for reclamation and deep excavation (state actual projects).</li>
+<li>SAF Commandos NCO leadership; safety-first site culture.</li>
+</ul>
+<h3 id="a2-one-page-capability-statement-text">A.2. One-page capability statement (text)</h3>
+<p><strong>Tuang Guang Jie, Geotechnical Engineer (independent)</strong>
+Singapore | 20 years | offshore, nearshore, onshore | mobilise in 14 days</p>
+<p><strong>Site work:</strong> client representative, QC, site manager, lead engineer on soil investigations; rig moves; drilling and sampling supervision; in-situ testing; laboratory programmes.</p>
+<p><strong>Analysis (remote, fixed price):</strong>
+- Jack-up leg-penetration assessment per location
+- Pile capacity, driveability and ageing per structure
+- Mudmat / shallow foundation stability
+- Conductor setting depth
+- Third-party review of factual and interpretive reports</p>
+<p><strong>Onshore:</strong> SI supervision, instrumentation and settlement interpretation, laboratory data QC and lab witness, tender support for SI contractors.</p>
+<p><strong>Track record:</strong> Fugro Singapore (Woodside Browse, PEMEX Bay of Campeche, Irish Sea windfarms); Smitech (PUB sewer rehabilitation PM); FOSTA (senior engineer / PM); independent since 2012 across SE Asia, Australia, India, Gulf of Mexico.</p>
+<p><strong>Standards:</strong> ISO 19905-1, API RP 2GEO, ISO 19901-4, AGS, ASTM/BS lab methods. <strong>Tools:</strong> gINT, JURIG3, APICAP, Uniplot, Geodin.</p>
+<p>Contact: [phone] | [e-mail] | LinkedIn</p>
+<h3 id="a3-linkedin-rewrite">A.3. LinkedIn rewrite</h3>
+<p><strong>Headline:</strong> Offshore &amp; Onshore Geotechnical Engineer | Client Rep / QC | Jack-up SSA, Pile Capacity &amp; Driveability | Site Investigation &amp; Instrumentation | Singapore, available 14 days</p>
+<p><strong>About (first 3 lines are what shows):</strong>
+Independent geotechnical engineer, 20 years across offshore oil and gas, offshore wind, CCS and onshore infrastructure soil investigations. Available now for client rep / QC rotations, remote fixed-price analysis packages (jack-up leg penetration, pile capacity and driveability, mudmat), and onshore SI, instrumentation and lab QC roles in Singapore and Johor.</p>
+<p>Then the existing paragraphs, tightened.</p>
+<p><strong>Skills to add:</strong> CPT interpretation, AGS data, ISO 19905-1, API RP 2GEO, pile driveability, GRLWEAP, gINT, geotechnical instrumentation, ground improvement QC, ISO/IEC 17025, expert witness (after first case).</p>
+<p><strong>Settings:</strong> Open to work (recruiters only or public), job titles: Geotechnical Engineer, Client Representative, Resident Engineer, Geotechnical Project Manager; locations: Singapore, Malaysia, Remote.</p>
+<h3 id="a4-messages">A.4. Messages</h3>
+<p><strong>Trigger-based, contractor (offshore)</strong></p>
+<blockquote>
+<p>Congratulations on [contract]. The scope ([CPTu / jack-up assessments / driveability / reporting]) is what I have delivered as lead engineer and client rep across SE Asia since 2012, including [nearest relevant project]. Singapore-based, 14 days to mobilise, and I take remote analysis packages at a fixed price during campaign peaks. One-page capability statement attached.</p>
+</blockquote>
+<p><strong>Trigger-based, onshore SI or reclamation contractor</strong></p>
+<blockquote>
+<p>I saw you were awarded [project]. I am a Singapore-based geotechnical engineer with 20 years in soil investigation, lab data and reporting (Fugro-trained), 7 years as client rep and QC, and PUB project-management experience. Available immediately for supervising engineer, instrumentation interpretation or report writing, day rate or fixed price per report.</p>
+</blockquote>
+<p><strong>Marine warranty / rig-move consultancy</strong></p>
+<blockquote>
+<p>When your leg-penetration workload spikes, I take overflow: ISO 19905-1 spudcan penetration, punch-through and extraction assessments, fixed price per location, 48-hour turnaround, delivered in your template for your review and stamp. 14 years of live rig-move assessments in SE Asia.</p>
+</blockquote>
+<p><strong>Lab / SI contractor, accreditation</strong></p>
+<blockquote>
+<p>If you are preparing or extending SAC-SINGLAS (ISO/IEC 17025) scope for soil testing, I can review methods, records and uncertainty budgets and run a mock assessment before the assessor visits. Fugro laboratory background; fixed-price package.</p>
+</blockquote>
+<p><strong>Warm reconnect (Fugro alumni)</strong></p>
+<blockquote>
+<p>Long time. I am independent and open for work while the wind market is quiet: client rep rotations, or remote leg-penetration and driveability packages if your team is stretched. If Fugro is routing overflow to freelancers this year, I would like to be on that list.</p>
+</blockquote>
+<p><strong>Expert-network onboarding blurb</strong></p>
+<blockquote>
+<p>Independent geotechnical engineer, 20 years across oil and gas, offshore wind, CCS and onshore infrastructure SI in APAC; can speak to survey-vessel supply and demand, SI contractor landscape, jack-up assessment practice, lab capacity and accreditation, and the effect of the 2025–26 offshore-wind slowdown on APAC contractors.</p>
+</blockquote>
+<h3 id="a5-registrations-two-days">A.5. Registrations (two days)</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Where</th>
+<th>Link</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Offshore agency</td>
+<td>Atlas Professionals / NextWave</td>
+<td>https://atlasprofessionals.com/jobs</td>
+</tr>
+<tr>
+<td>Offshore agency</td>
+<td>NES Fircroft Singapore</td>
+<td>https://www.nesfircroft.com/regions/recruitment-in-asia/singapore-jobs/</td>
+</tr>
+<tr>
+<td>Offshore agency</td>
+<td>Airswift</td>
+<td>https://www.airswift.com</td>
+</tr>
+<tr>
+<td>Offshore agency</td>
+<td>Brunel</td>
+<td>https://www.brunel.net</td>
+</tr>
+<tr>
+<td>Offshore agency</td>
+<td>SA World</td>
+<td>https://www.sa-world.com</td>
+</tr>
+<tr>
+<td>Offshore agency</td>
+<td>Spencer Ogden, EPI Group, Precise Consultants</td>
+<td>company sites</td>
+</tr>
+<tr>
+<td>Onshore SG agency</td>
+<td>Corestaff, PERSOLKELLY, Randstad, Hays, Michael Page</td>
+<td>company sites</td>
+</tr>
+<tr>
+<td>Expert network</td>
+<td>GLG, AlphaSights, Guidepoint, Dialectica, Coleman, Third Bridge</td>
+<td>expert sign-up pages</td>
+</tr>
+<tr>
+<td>Directory</td>
+<td>Expert Services International (Malaysia)</td>
+<td>https://www.expertservices.international</td>
+</tr>
+<tr>
+<td>Registration</td>
+<td>PEB portal account; read PE and Specialist PE (Geotechnical) guidelines</td>
+<td>https://www1.peb.gov.sg/resources/guidelines/</td>
+</tr>
+<tr>
+<td>Alerts</td>
+<td>GeBIZ keyword alerts; AusTender saved search; LinkedIn saved searches</td>
+<td>gebiz.gov.sg, tenders.gov.au</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-b-priority-targets">Appendix B. Priority targets</h2>
+<p>44 priority-1 accounts of 104 in <code>target_list.csv</code>. Offer numbers refer to §4.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Segment</th>
+<th>Company</th>
+<th>Base</th>
+<th>Why now</th>
+<th>Contact</th>
+<th>Offers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SEA offshore SI contractor</td>
+<td>HELMS Geomarine</td>
+<td>Kuala Lumpur</td>
+<td>PETRONAS CCS 3+2yr SI frame (Jun 2026); Sarawak jack-up P&amp;A drilling Jan-Mar 2026</td>
+<td>Geotechnical manager / operations manager (Direct + LinkedIn)</td>
+<td>2,3,1,6</td>
+</tr>
+<tr>
+<td>SEA offshore SI contractor</td>
+<td>Asian Geos</td>
+<td>Kuala Lumpur</td>
+<td>Gardline partner; SEA O&amp;G and cable surveys</td>
+<td>Operations manager (Direct)</td>
+<td>1,2,6</td>
+</tr>
+<tr>
+<td>SEA offshore SI contractor</td>
+<td>Fugro Singapore / Fugro Malaysia</td>
+<td>Singapore</td>
+<td>Fugro alumni; Taiwan FengMiao II SI Q3 2026; O&amp;G growth</td>
+<td>Regional geotechnical manager (ex-colleagues) (Warm intro)</td>
+<td>1,2,3,6</td>
+</tr>
+<tr>
+<td>SEA offshore SI contractor</td>
+<td>Fugro Taiwan / Fugro UST21 Korea</td>
+<td>Taipei / Seoul</td>
+<td>APAC wind SI survivors</td>
+<td>Project manager (Warm intro via Fugro alumni)</td>
+<td>1,6</td>
+</tr>
+<tr>
+<td>Marine warranty / rig-move</td>
+<td>ABL Group (incl. ex-LOC and AqualisBraemar)</td>
+<td>Singapore / Perth</td>
+<td>Bass Strait vessel suitability surveys; rig moves SEA</td>
+<td>Geotechnical / marine ops lead (Direct)</td>
+<td>2,3,1</td>
+</tr>
+<tr>
+<td>Marine warranty / rig-move</td>
+<td>DNV Jack-up and Geotechnical</td>
+<td>Singapore / Kuala Lumpur</td>
+<td>SSA services APAC</td>
+<td>Section head (Direct)</td>
+<td>2,3</td>
+</tr>
+<tr>
+<td>Marine warranty / rig-move</td>
+<td>Cathie Group</td>
+<td>UK / Asia clients</td>
+<td>JACA; 1500+ SSAs</td>
+<td>Geotechnical director (Direct)</td>
+<td>2,3</td>
+</tr>
+<tr>
+<td>Marine warranty / rig-move</td>
+<td>Global Maritime</td>
+<td>Singapore</td>
+<td>SSA with Cathie</td>
+<td>Regional manager (Direct)</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Drilling contractor</td>
+<td>Velesto Energy</td>
+<td>Kuala Lumpur</td>
+<td>Malaysian jack-up fleet; 2026 campaigns</td>
+<td>Operations / rig-move coordinator (Direct)</td>
+<td>2,1</td>
+</tr>
+<tr>
+<td>Drilling contractor</td>
+<td>Borr Drilling</td>
+<td>Singapore / SEA ops</td>
+<td>Jack-ups in SEA and Middle East</td>
+<td>Regional operations manager (Direct)</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Drilling contractor</td>
+<td>Valaris</td>
+<td>Singapore / SEA ops</td>
+<td>Jack-ups APAC</td>
+<td>Rig-move engineering (Direct)</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Operator / decommissioning</td>
+<td>PETRONAS Carigali decommissioning</td>
+<td>Kuala Lumpur</td>
+<td>Removal of up to 31 platforms tendering</td>
+<td>Decom project engineers (Via EPRD contractors)</td>
+<td>2,3</td>
+</tr>
+<tr>
+<td>Operator / decommissioning</td>
+<td>Chevron Malaysia</td>
+<td>Kuala Lumpur</td>
+<td>North Malay FFD campaign on NAGA 8 from Aug 2026</td>
+<td>Drilling geotech (Direct)</td>
+<td>2</td>
+</tr>
+<tr>
+<td>CCS</td>
+<td>PETRONAS CCS Solutions</td>
+<td>Kuala Lumpur</td>
+<td>Kasawari and future CCS hubs</td>
+<td>SI package engineers (Via HELMS)</td>
+<td>2,3,6</td>
+</tr>
+<tr>
+<td>Wind developer</td>
+<td>Copenhagen Infrastructure Partners (CIP) Taiwan</td>
+<td>Taipei</td>
+<td>FengMiao II SI Q3 2026</td>
+<td>Package manager geotechnical (Direct)</td>
+<td>1,6</td>
+</tr>
+<tr>
+<td>Wind developer</td>
+<td>Ørsted Korea</td>
+<td>Seoul</td>
+<td>Incheon 1.4 GW surveys done; design phase</td>
+<td>Geotechnical package manager (Direct)</td>
+<td>6,3</td>
+</tr>
+<tr>
+<td>Singapore SI contractor</td>
+<td>FOSTA Pte Ltd</td>
+<td>Singapore</td>
+<td>Former employer; T5/CRL/Long Island SI demand</td>
+<td>Director (Warm)</td>
+<td>1,4,6,7</td>
+</tr>
+<tr>
+<td>Singapore SI contractor</td>
+<td>Geospecs</td>
+<td>Singapore</td>
+<td>Public SI term contracts</td>
+<td>Director (Direct)</td>
+<td>1,4,6,7</td>
+</tr>
+<tr>
+<td>Singapore SI contractor</td>
+<td>Soil &amp; Foundation (S&amp;F)</td>
+<td>Singapore</td>
+<td>SI and instrumentation</td>
+<td>Director (Direct)</td>
+<td>1,4,5,7</td>
+</tr>
+<tr>
+<td>Singapore SI contractor</td>
+<td>GIE / GIEF</td>
+<td>Singapore</td>
+<td>SI and micro-piling</td>
+<td>Director (Direct)</td>
+<td>1,4,7</td>
+</tr>
+<tr>
+<td>Reclamation / ground improvement</td>
+<td>Penta-Ocean Construction Singapore</td>
+<td>Singapore</td>
+<td>T5 tunnels (with Koh Brothers); reclamation history</td>
+<td>Geotechnical / QC manager (Direct)</td>
+<td>5,1,6</td>
+</tr>
+<tr>
+<td>Reclamation / ground improvement</td>
+<td>Koh Brothers Building &amp; Civil</td>
+<td>Singapore</td>
+<td>T5 JV</td>
+<td>Project geotechnical engineer (Direct)</td>
+<td>5,1</td>
+</tr>
+<tr>
+<td>Reclamation / ground improvement</td>
+<td>Boskalis Asia</td>
+<td>Singapore</td>
+<td>Tuas and reclamation</td>
+<td>Project manager (Direct)</td>
+<td>5,1</td>
+</tr>
+<tr>
+<td>Reclamation / ground improvement</td>
+<td>Van Oord Asia</td>
+<td>Singapore</td>
+<td>Reclamation and cable</td>
+<td>Project manager (Direct)</td>
+<td>5,1</td>
+</tr>
+<tr>
+<td>Reclamation / ground improvement</td>
+<td>Jan De Nul Singapore</td>
+<td>Singapore</td>
+<td>Reclamation</td>
+<td>Project manager (Direct)</td>
+<td>5,1</td>
+</tr>
+<tr>
+<td>Reclamation / ground improvement</td>
+<td>DEME Asia</td>
+<td>Singapore</td>
+<td>Reclamation and offshore wind</td>
+<td>Project manager (Direct)</td>
+<td>5,1</td>
+</tr>
+<tr>
+<td>Owner and consultant (SG)</td>
+<td>Surbana Jurong</td>
+<td>Singapore</td>
+<td>Long Island and HDB consultancies</td>
+<td>Geotechnical section head (Direct)</td>
+<td>6,5</td>
+</tr>
+<tr>
+<td>Owner and consultant (SG)</td>
+<td>Arup Singapore</td>
+<td>Singapore</td>
+<td>CRL / T5 geotechnical</td>
+<td>Geotechnical lead (Direct)</td>
+<td>6</td>
+</tr>
+<tr>
+<td>Owner and consultant (SG)</td>
+<td>AECOM Singapore</td>
+<td>Singapore</td>
+<td>LTA and PUB consultancies</td>
+<td>Geotechnical lead (Direct)</td>
+<td>6,5</td>
+</tr>
+<tr>
+<td>Owner and consultant (SG)</td>
+<td>Mott MacDonald Singapore</td>
+<td>Singapore</td>
+<td>Rail and coastal</td>
+<td>Geotechnical lead (Direct)</td>
+<td>6</td>
+</tr>
+<tr>
+<td>Johor / Malaysia onshore</td>
+<td>Data-centre developers in Johor (Equinix; AirTrunk; Princeton Digital; YTL; Bridge; NTT; GDS)</td>
+<td>Johor</td>
+<td>5 GW+ pipeline; campus SI and piling</td>
+<td>Development / construction managers (Direct via owner's engineers)</td>
+<td>1,4,5,6</td>
+</tr>
+<tr>
+<td>Johor / Malaysia onshore</td>
+<td>Piling contractors Johor/KL (e.g. Pintaras; Econpile; Ikhmas; Sunway Geotechnics)</td>
+<td>Johor / KL</td>
+<td>Data-centre foundations</td>
+<td>Project manager (Direct)</td>
+<td>5,3,6</td>
+</tr>
+<tr>
+<td>Floating solar</td>
+<td>Cypark Renewable Energy / Sunview Group</td>
+<td>Malaysia</td>
+<td>Kenyir 595 MW FPV construction from Jun 2026</td>
+<td>EPC geotechnical / anchoring lead (Direct)</td>
+<td>3,1,6</td>
+</tr>
+<tr>
+<td>Floating solar</td>
+<td>Masdar (Chereh Dam 200 MW)</td>
+<td>Abu Dhabi / KL</td>
+<td>PPA signed; Cirata precedent</td>
+<td>Project development (Direct)</td>
+<td>3,6</td>
+</tr>
+<tr>
+<td>Agency (offshore)</td>
+<td>Atlas Professionals / Atlas NextWave</td>
+<td>Singapore / global</td>
+<td>Client rep placements</td>
+<td>Recruiter (Register)</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Agency (offshore)</td>
+<td>NES Fircroft</td>
+<td>Singapore / KL / Tokyo</td>
+<td>Contract staff</td>
+<td>Recruiter (Register)</td>
+<td>1,9</td>
+</tr>
+<tr>
+<td>Agency (offshore)</td>
+<td>Airswift</td>
+<td>Singapore / KL</td>
+<td>Contract staff</td>
+<td>Recruiter (Register)</td>
+<td>1,9</td>
+</tr>
+<tr>
+<td>Agency (offshore)</td>
+<td>Brunel</td>
+<td>Singapore / KL</td>
+<td>Contract staff</td>
+<td>Recruiter (Register)</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Agency (offshore)</td>
+<td>SA World</td>
+<td>UK / global</td>
+<td>Client rep geophys/geotech</td>
+<td>Recruiter (Register)</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Agency (onshore SG)</td>
+<td>Corestaff</td>
+<td>Singapore</td>
+<td>Construction engineers</td>
+<td>Recruiter (Register)</td>
+<td>5,9</td>
+</tr>
+<tr>
+<td>Agency (onshore SG)</td>
+<td>PERSOLKELLY</td>
+<td>Singapore</td>
+<td>Engineering contract</td>
+<td>Recruiter (Register)</td>
+<td>5,9</td>
+</tr>
+<tr>
+<td>Expert network</td>
+<td>GLG</td>
+<td>Global</td>
+<td>Investor calls on APAC offshore/SI</td>
+<td>Onboarding (Register)</td>
+<td>8</td>
+</tr>
+<tr>
+<td>Expert network</td>
+<td>AlphaSights</td>
+<td>Global</td>
+<td>Consulting and PE calls</td>
+<td>Onboarding (Register)</td>
+<td>8</td>
+</tr>
+<tr>
+<td>Expert network</td>
+<td>Guidepoint</td>
+<td>Global</td>
+<td>Calls</td>
+<td>Onboarding (Register)</td>
+<td>8</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-c-later-product-options-deferred-until-he-is-billing">Appendix C. Later: product options (deferred until he is billing)</h2>
+<p>Ranked in <code>collaboration_assessment.md</code>:</p>
+<ul>
+<li><strong>A. Productized leg-penetration assessment.</strong> SI data in, ISO 19905-1 penetration prediction and draft report out in under an hour, with his review and signature. Demand is steady (jack-up utilisation ~90 %); existing tools (Cathie's JACA, DNV, Ryder, CASK Spudpen) are sold as consultancy or enterprise licences, not to independents. Six-week probe, gated on two pre-sold jobs.</li>
+<li><strong>B. Factual-report and CPT-interpretation automation</strong> for small SI contractors, downstream of the Singapore reclamation programme.</li>
+<li><strong>C. Physics-informed ML</strong> on pile driveability and set-up, as a co-authored white paper built on A/B data, timed for the 2027 recovery.</li>
+<li><strong>D. He becomes Laminar Flow's geotechnical and marine domain lead</strong> for bids; revenue share per engagement.</li>
+</ul>
+<p>Terms to settle before anything ships: liability, client confidentiality, purchased standards, a written revenue and IP split, and who sells.</p>
+<h2 id="sources">Sources</h2>
+<p>Fugro H1 2026 (Baird Maritime, Windpower NL); Westwood on Taiwan Round 3.1 and on Aramco jack-ups; White &amp; Case and Aegir Insights on Japan; Windtech International on Korea's H1 2026 auction; BCA Construction Prospects 2026; Corestaff hiring reports; URA and Malay Mail on Long Island and Tekong; JLL and Johor industrial news on JS-SEZ data centres; Ground Engineering and Offshore Energy on the HELMS–PETRONAS CCS contract; Offsnet on Malaysian decommissioning; Enerdata, ENR and SolarQuarter on Malaysian floating solar; Petroleum Australia and Offshore Energy on Bass Strait; Jobs and Skills Australia on geotechnical engineers; PEB guidelines for Specialist PE (Geotechnical); Masin and Expert Services International on expert-witness work; Construction Week on NEOM; iPS and crewbase on offshore day rates; Jobstreet and SalaryExpert on Singapore salaries; Expert Opportunities on expert-network rates. Full links are in <code>job_acquisition_plan.md</code> and <code>collaboration_assessment.md</code>.</p>
+</main>
+</div>
