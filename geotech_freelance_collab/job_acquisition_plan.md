@@ -75,6 +75,25 @@ Sequencing:
 
 Offers 2–7 need no vessel and no mobilisation. They are how he earns while the offshore market is slow.
 
+### 3.1 What each offer pays (planning ranges)
+
+Sourced figures are marked; the rest are working estimates from how this market prices and should be checked against his own past invoices in week 1.
+
+| Offer | Unit | Range | Basis |
+|---|---|---|---|
+| Offshore client rep / QC, APAC | Day rate | USD 600–1,000; UK/North Sea USD 800–1,400 | Published offshore survey day-rate spread USD 150–1,400 and EUR 250–800+; senior client reps sit at the top of it (sourced) |
+| One offshore campaign | 4–8 week rotation | USD 17,000–56,000 gross | Day rate × days on board; a 28/28 rotation means roughly half the year unpaid |
+| Onshore Singapore SI / instrumentation engineer | Day rate or month | S$450–700 per day; S$7,000–9,000 per month on contract | Senior geotechnical salaries ~S$89k per year, plus the 10–20 % 2026 premium for hard-to-fill roles (sourced), converted to contract |
+| Jack-up leg-penetration assessment | Per location | USD 3,000–8,000 as an independent; consultancies charge more for a full SSA including naval-architecture scope | Consultancies quote case by case; no public price list (estimate) |
+| Pile capacity / driveability / mudmat package | Per structure | USD 4,000–15,000 depending on data and scope | Estimate |
+| Factual or interpretive report writing, third-party review | Per report | USD 1,500–6,000 | Estimate |
+| Lab data QC / lab witness / ISO 17025 readiness | Day or fixed | S$500–800 per day; S$8,000–20,000 for an accreditation-readiness package | Estimate |
+| Instrumentation interpretation retainer | Per month | S$3,000–8,000 for a part-time retainer on one reclamation or excavation job | Estimate |
+| Expert-network call | Per hour | USD 200–500 | Published network rate guidance (sourced); GLG negotiates hardest |
+| Expert witness | Per day | S$2,500–5,000 once established; report plus hearing days | Market convention for senior engineering experts in Singapore (estimate) |
+
+Rule of thumb: one offshore rotation a quarter plus two fixed-price analysis packages a month replaces a full-time senior salary; the fixed-price work is the part that does not depend on a vessel sailing.
+
 ---
 
 ## 4. Opportunities to explore (beyond 60 days)
